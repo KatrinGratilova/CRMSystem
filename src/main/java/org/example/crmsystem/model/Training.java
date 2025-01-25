@@ -16,5 +16,4 @@ public class Training {
     private TrainingType trainingType;
     private LocalDateTime trainingDate;
     private Timestamp trainingTime;
-
 }
