@@ -1,27 +1,64 @@
 package org.example.crmsystem.dao;
 
+import org.example.crmsystem.utils.InMemoryGymStorage;
+import org.example.crmsystem.dao.interfaces.TraineeRepository;
 import org.example.crmsystem.model.Trainee;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 public class TraineeRepositoryImpl implements TraineeRepository {
+    private final Map<Long, Trainee> traineeStorage;
+    private long idCounter;
+
+    @Autowired
+    public TraineeRepositoryImpl(InMemoryGymStorage inMemoryGymStorage) {
+        traineeStorage = inMemoryGymStorage.getTraineeStorage();
+        idCounter = traineeStorage
+                .keySet()
+                .stream()
+                .max(Long::compare)
+                .orElse(0L);
+    }
+
     @Override
     public Trainee add(Trainee trainee) {
-        return null;
+        trainee.setUserId(++idCounter);
+        traineeStorage.put(idCounter, trainee);
+        return trainee;
     }
 
     @Override
     public Trainee update(Trainee trainee) {
-        return null;
+        if (!traineeStorage.containsKey(trainee.getUserId())) {
+            throw new IllegalArgumentException("Trainee with ID " + trainee.getUserId() + " does not exist.");
+        }
+        traineeStorage.put(trainee.getUserId(), trainee);
+        return trainee;
     }
 
     @Override
     public boolean deleteById(long id) {
-        return false;
+        return traineeStorage.remove(id) != null;
     }
 
     @Override
-    public Trainee getById(long id) {
-        return null;
+    public Optional<Trainee> getById(long id) {
+        return Optional.ofNullable(traineeStorage.get(id));
+    }
+
+    @Override
+    public List<Trainee> getByUserName(String userName) {
+        return traineeStorage.values()
+                .stream()
+                .filter(x -> x.getUserName().startsWith(userName))
+                .collect(Collectors.toList());
+    }
+
+    public Map<Long, Trainee> getAll() {
+        return traineeStorage;
     }
 }
