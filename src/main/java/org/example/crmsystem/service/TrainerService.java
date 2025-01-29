@@ -1,9 +1,8 @@
 package org.example.crmsystem.service;
 
-import org.example.crmsystem.dao.interfaces.TrainerRepository;
+import org.example.crmsystem.dao.interfaces.TrainerDAO;
 import org.example.crmsystem.model.Trainer;
-import org.example.crmsystem.utils.PasswordGenerator;
-import org.example.crmsystem.utils.UsernameGenerator;
+import org.example.crmsystem.utils.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,13 +10,13 @@ import java.util.Optional;
 
 @Service
 public class TrainerService {
-    private final TrainerRepository trainerRepository;
+    private final TrainerDAO trainerDAO;
     private final PasswordGenerator passwordGenerator;
     private final UsernameGenerator usernameGenerator;
 
     @Autowired
-    public TrainerService(TrainerRepository trainerRepository, PasswordGenerator passwordGenerator, UsernameGenerator usernameGenerator) {
-        this.trainerRepository = trainerRepository;
+    public TrainerService(TrainerDAO trainerDAO, PasswordGenerator passwordGenerator, UsernameGenerator usernameGenerator) {
+        this.trainerDAO = trainerDAO;
         this.passwordGenerator = passwordGenerator;
         this.usernameGenerator = usernameGenerator;
     }
@@ -25,14 +24,18 @@ public class TrainerService {
     public Trainer add(Trainer trainer) {
         trainer.setUserName(usernameGenerator.generateUserName(trainer));
         trainer.setPassword(passwordGenerator.generateUserPassword());
-        return trainerRepository.add(trainer);
+        return trainerDAO.add(trainer);
     }
 
     public Trainer update(Trainer trainer) {
-        return trainerRepository.update(trainer);
+        return trainerDAO.update(trainer);
     }
 
     public Optional<Trainer> getById(long id) {
-        return trainerRepository.getById(id);
+        return trainerDAO.getById(id);
+    }
+
+    public void addTraining(long trainerId, long trainingId) {
+        trainerDAO.addTraining(trainerId, trainingId);
     }
 }

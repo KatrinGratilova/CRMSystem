@@ -1,9 +1,8 @@
 package org.example.crmsystem.service;
 
-import org.example.crmsystem.dao.interfaces.TraineeRepository;
+import org.example.crmsystem.dao.interfaces.TraineeDAO;
 import org.example.crmsystem.model.Trainee;
-import org.example.crmsystem.utils.PasswordGenerator;
-import org.example.crmsystem.utils.UsernameGenerator;
+import org.example.crmsystem.utils.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,13 +12,13 @@ import java.util.Optional;
 
 @Service
 public class TraineeService {
-    private final TraineeRepository traineeRepository;
+    private final TraineeDAO traineeDAO;
     private final PasswordGenerator passwordGenerator;
     private final UsernameGenerator usernameGenerator;
 
     @Autowired
-    public TraineeService(TraineeRepository traineeRepository, PasswordGenerator passwordGenerator, UsernameGenerator usernameGenerator) {
-        this.traineeRepository = traineeRepository;
+    public TraineeService(TraineeDAO traineeDAO, PasswordGenerator passwordGenerator, UsernameGenerator usernameGenerator) {
+        this.traineeDAO = traineeDAO;
         this.passwordGenerator = passwordGenerator;
         this.usernameGenerator = usernameGenerator;
     }
@@ -27,22 +26,26 @@ public class TraineeService {
     public Trainee add(Trainee trainee) throws IOException {
         trainee.setPassword(passwordGenerator.generateUserPassword());
         trainee.setUserName(usernameGenerator.generateUserName(trainee));
-        return traineeRepository.add(trainee);
+        return traineeDAO.add(trainee);
     }
 
     public Trainee update(Trainee trainee) {
-        return traineeRepository.update(trainee);
+        return traineeDAO.update(trainee);
     }
 
     public boolean deleteById(long id) {
-        return traineeRepository.deleteById(id);
+        return traineeDAO.deleteById(id);
     }
 
     public Optional<Trainee> getById(long id) {
-        return traineeRepository.getById(id);
+        return traineeDAO.getById(id);
     }
 
     public Map<Long, Trainee> getAllTrainees() {
-        return traineeRepository.getAll();
+        return traineeDAO.getAll();
+    }
+
+    public void addTraining(long traineeId, long trainingId) {
+        traineeDAO.addTraining(traineeId, trainingId);
     }
 }
