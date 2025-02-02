@@ -5,7 +5,12 @@ import lombok.Getter;
 @Getter
 
 public enum TrainingType {
-    PILATES("PILATES");
+    PILATES("PILATES"),
+    FITNESS("FITNESS"),
+    YOGA("YOGA"),
+    ZUMBA("ZUMBA"),
+    STRETCHING("STRETCHING"),
+    RESISTANCE("RESISTANCE");
     private final String trainingTypeName;
 
     TrainingType(String trainingTypeName) {

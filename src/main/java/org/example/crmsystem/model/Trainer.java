@@ -11,14 +11,13 @@ import java.util.List;
 @Data
 @SuperBuilder
 public class Trainer extends User {
-    private TrainingType specialization;
     private long trainerId;
-    private List<Long> trainerTrainings;
+    private TrainingType specialization;
+    private List<Long> trainerTrainings = new ArrayList<>();
 
-    public Trainer(String firstName, String lastName, String userName, String password, boolean isActive, TrainingType specialization, long userId) {
+    public Trainer(String firstName, String lastName, String userName, String password, boolean isActive, TrainingType specialization, long trainerId) {
         super(firstName, lastName, userName, password, isActive);
+        this.trainerId = trainerId;
         this.specialization = specialization;
-        this.trainerId = userId;
-        trainerTrainings = new ArrayList<>();
     }
 }
