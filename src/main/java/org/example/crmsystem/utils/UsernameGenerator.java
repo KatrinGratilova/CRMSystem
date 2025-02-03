@@ -1,10 +1,8 @@
 package org.example.crmsystem.utils;
 
-import org.example.crmsystem.dao.TraineeDAOImpl;
 import org.example.crmsystem.dao.interfaces.TraineeDAO;
 import org.example.crmsystem.dao.interfaces.TrainerDAO;
 import org.example.crmsystem.model.User;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component

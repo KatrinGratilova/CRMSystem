@@ -4,6 +4,8 @@ import lombok.extern.log4j.Log4j2;
 import org.example.crmsystem.dao.interfaces.TrainingDAO;
 import org.example.crmsystem.exception.EntityNotFoundException;
 import org.example.crmsystem.exception.IncompatibleSpecialization;
+import org.example.crmsystem.messages.ExceptionMessages;
+import org.example.crmsystem.messages.LogMessages;
 import org.example.crmsystem.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,23 +27,23 @@ public class TrainingService {
     }
 
     public Training add(Training training) {
-        log.debug("Attempting to add training for trainee with ID {} and trainer with ID {}",
-                training.getTraineeId(), training.getTrainerId());
+        log.debug(LogMessages.ATTEMPTING_TO_ADD_NEW_TRAINING.getMessage(), training.getTrainingName());
 
         training = trainingDAO.add(training);
 
+        log.info(LogMessages.ADDED_NEW_TRAINING.getMessage(), training.getTrainingId());
         return training;
     }
 
     public Training getById(long id) throws EntityNotFoundException {
-        log.debug("Retrieving training with ID {}", id);
+        log.debug(LogMessages.RETRIEVING_TRAINING.getMessage(), id);
         Optional<Training> training = trainingDAO.getById(id);
 
         if (training.isEmpty()) {
             log.warn(LogMessages.TRAINING_NOT_FOUND.getMessage(), id);
-            throw new EntityNotFoundException("Training with ID " + id + " is not found.");
+            throw new EntityNotFoundException(ExceptionMessages.TRAINING_NOT_FOUND.format(id));
         } else {
-            log.info("Training with ID {} retrieved successfully.", id);
+            log.info(LogMessages.TRAINING_FOUND.getMessage(), id);
             return training.get();
         }
     }
@@ -51,26 +53,24 @@ public class TrainingService {
         long trainerId = training.getTrainerId();
         long trainingId = training.getTrainingId();
 
-        log.debug("Starting to update trainee with ID: {}", trainingId);
-
+        log.debug(LogMessages.ATTEMPTING_TO_UPDATE_TRAINING.getMessage(), trainingId);
 
         if (!checkIfTraineeExists(traineeId) || !checkIfTrainerExists(trainerId)) {
-            throw new EntityNotFoundException("Cannot create training: trainee or trainer with such ID is not found.");
+            throw new EntityNotFoundException(ExceptionMessages.CANNOT_UPDATE_TRAINING.getMessage());
         }
         if (!trainerService.getById(trainerId).getSpecialization().equals(training.getTrainingType())) {
-            log.error("Incompatible specialization for trainer with ID {} while adding training with ID {}",
-                    trainerId, trainingId);
-            throw new IncompatibleSpecialization("Incompatible specialization for trainer with ID " + trainerId + " while adding training with ID" + trainingId);
+            log.error(LogMessages.INCOMPATIBLE_SPECIALIZATION.getMessage(), trainerId, trainingId);
+            throw new IncompatibleSpecialization(ExceptionMessages.INCOMPATIBLE_SPECIALIZATION.format(trainerId, trainingId));
         }
 
         Training updatedTraining;
         try {
             updatedTraining = trainingDAO.update(training);
         } catch (EntityNotFoundException e) {
-            log.warn("Training with ID {} not found for update", trainingId);
+            log.warn(LogMessages.TRAINING_NOT_FOUND.getMessage(), trainingId);
             throw e;
         }
-        log.info("Training successfully updated with ID: {}", updatedTraining.getTrainingId());
+        log.info(LogMessages.UPDATED_TRAINING.getMessage(), trainingId);
         return updatedTraining;
     }
 

@@ -6,7 +6,9 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.log4j.Log4j2;
 import org.example.crmsystem.exception.EntityNotFoundException;
+import org.example.crmsystem.messages.ExceptionMessages;
 import org.example.crmsystem.model.Trainee;
+import org.example.crmsystem.messages.LogMessages;
 import org.example.crmsystem.storage.interfaces.Storage;
 import org.example.crmsystem.storage.interfaces.TrainingAttending;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,7 +36,7 @@ public class InMemoryTraineeStorage implements Storage<Trainee>, TrainingAttendi
 
     @PostConstruct
     public void init() {
-        log.debug("Initializing in-memory trainee storage from file: {}", traineeFilePath);
+        log.debug(LogMessages.INITIALIZING_STORAGE.getMessage(), traineeFilePath);
         try {
             traineeStorage = mapper.readValue(new File(traineeFilePath), new TypeReference<HashMap<Long, Trainee>>() {
             });
@@ -43,9 +45,9 @@ public class InMemoryTraineeStorage implements Storage<Trainee>, TrainingAttendi
                     .stream()
                     .max(Long::compare)
                     .orElse(0L);
-            log.info("Trainee storage initialized successfully with {} records.", traineeStorage.size());
+            log.info(LogMessages.TRAINEE_STORAGE_INITIALIZED.getMessage(), traineeStorage.size());
         } catch (Exception e) {
-            log.error("Failed to initialize trainee storage from file: {}", traineeFilePath);
+            log.error(LogMessages.FAILED_TO_INITIALIZE_STORAGE.getMessage(), traineeFilePath);
             traineeStorage = new HashMap<>();
         }
     }
@@ -64,10 +66,11 @@ public class InMemoryTraineeStorage implements Storage<Trainee>, TrainingAttendi
 
     @Override
     public Trainee update(Trainee trainee) throws EntityNotFoundException {
-        if (!traineeStorage.containsKey(trainee.getTraineeId()))
-            throw new EntityNotFoundException( "Trainee with ID " + trainee.getTraineeId() + " does not exist.");
+        long traineeId = trainee.getTraineeId();
+        if (!traineeStorage.containsKey(traineeId))
+            throw new EntityNotFoundException(ExceptionMessages.TRAINEE_NOT_FOUND.format(traineeId));
 
-        traineeStorage.put(trainee.getTraineeId(), trainee);
+        traineeStorage.put(traineeId, trainee);
         return trainee;
     }
 
@@ -78,13 +81,13 @@ public class InMemoryTraineeStorage implements Storage<Trainee>, TrainingAttendi
 
     @Override
     public List<Trainee> getByName(String userName) {
-        log.debug("Searching trainees with username starting with '{}'", userName);
+        log.debug(LogMessages.SEARCHING_TRAINEES_BY_NAME.getMessage(), userName);
         List<Trainee> trainees = traineeStorage.values()
                 .stream()
                 .filter(x -> x.getUserName().startsWith(userName))
                 .collect(Collectors.toList());
 
-        log.info("Found {} trainees with username starting with '{}'.", trainees.size(), userName);
+        log.info(LogMessages.FOUND_TRAINEES_BY_NAME.getMessage(), trainees.size(), userName);
         return trainees;
     }
 
@@ -96,7 +99,7 @@ public class InMemoryTraineeStorage implements Storage<Trainee>, TrainingAttendi
     @Override
     public void addTraining(long traineeId, long trainingId) throws EntityNotFoundException {
         if (!traineeStorage.containsKey(traineeId))
-            throw new EntityNotFoundException( "Trainee with ID " + traineeId + " does not exist.");
+            throw new EntityNotFoundException(ExceptionMessages.TRAINEE_NOT_FOUND.format(traineeId));
 
         Trainee trainee = traineeStorage.get(traineeId);
         trainee.getTraineeTrainings().add(trainingId);
@@ -104,12 +107,12 @@ public class InMemoryTraineeStorage implements Storage<Trainee>, TrainingAttendi
 
     @PreDestroy
     public void destroy() {
-        log.debug("Saving trainee storage to file: {}", traineeFilePath);
+        log.debug(LogMessages.ATTEMPTING_TO_SAVE_STORAGE.getMessage(), traineeFilePath);
         try {
             mapper.writeValue(new File(traineeFilePath), traineeStorage);
-            log.info("Trainee storage saved successfully to file.");
+            log.info(LogMessages.SAVED_STORAGE.getMessage(), traineeFilePath);
         } catch (IOException e) {
-            log.error("Failed to save trainee storage to file: {}", traineeFilePath, e);
+            log.error(LogMessages.FAILED_TO_SAVE_STORAGE.getMessage(), traineeFilePath, e);
         }
     }
 }

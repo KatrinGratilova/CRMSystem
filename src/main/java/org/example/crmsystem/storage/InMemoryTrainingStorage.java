@@ -6,7 +6,9 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.log4j.Log4j2;
 import org.example.crmsystem.exception.EntityNotFoundException;
+import org.example.crmsystem.messages.ExceptionMessages;
 import org.example.crmsystem.model.Training;
+import org.example.crmsystem.messages.LogMessages;
 import org.example.crmsystem.storage.interfaces.Storage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -33,7 +35,7 @@ public class InMemoryTrainingStorage implements Storage<Training> {
 
     @PostConstruct
     public void init() {
-        log.debug("Initializing in-memory training storage from file: {}", trainingFilePath);
+        log.debug(LogMessages.INITIALIZING_STORAGE.getMessage(), trainingFilePath);
         try {
             trainingStorage = mapper.readValue(new File(trainingFilePath), new TypeReference<HashMap<Long, Training>>() {
             });
@@ -42,9 +44,9 @@ public class InMemoryTrainingStorage implements Storage<Training> {
                     .stream()
                     .max(Long::compare)
                     .orElse(0L);
-            log.info("Training storage initialized successfully with {} records.", trainingStorage.size());
+            log.info(LogMessages.TRAINING_STORAGE_INITIALIZED.getMessage(), trainingStorage.size());
         } catch (Exception e) {
-            log.error("Failed to initialize training storage from file: {}", trainingFilePath);
+            log.error(LogMessages.FAILED_TO_INITIALIZE_STORAGE.getMessage(), trainingFilePath);
             trainingStorage = new HashMap<>();
         }
     }
@@ -65,7 +67,7 @@ public class InMemoryTrainingStorage implements Storage<Training> {
     public Training update(Training training) throws EntityNotFoundException {
         long trainingId = training.getTrainingId();
         if (!trainingStorage.containsKey(trainingId))
-            throw new EntityNotFoundException( "Training with ID " + trainingId + " does not exist.");
+            throw new EntityNotFoundException(ExceptionMessages.TRAINING_NOT_FOUND.format(trainingId));
 
         trainingStorage.put(trainingId, training);
         return training;
@@ -78,13 +80,13 @@ public class InMemoryTrainingStorage implements Storage<Training> {
 
     @Override
     public List<Training> getByName(String name) {
-        log.debug("Searching trainings with username starting with '{}'", name);
+        log.debug(LogMessages.SEARCHING_TRAININGS_BY_NAME.getMessage(), name);
         List<Training> trainings = trainingStorage.values()
                 .stream()
                 .filter(x -> x.getTrainingName().startsWith(name))
                 .collect(Collectors.toList());
 
-        log.info("Found {} trainings with username starting with '{}'.", trainings.size(), name);
+        log.info(LogMessages.FOUND_TRAININGS_BY_NAME.getMessage(), trainings.size(), name);
         return trainings;
     }
 
@@ -95,12 +97,12 @@ public class InMemoryTrainingStorage implements Storage<Training> {
 
     @PreDestroy
     public void destroy() {
-        log.debug("Saving training storage to file: {}", trainingFilePath);
+        log.debug(LogMessages.ATTEMPTING_TO_SAVE_STORAGE.getMessage(), trainingFilePath);
         try {
             mapper.writeValue(new File(trainingFilePath), trainingStorage);
-            log.info("Training storage saved successfully to file.");
+            log.info(LogMessages.SAVED_STORAGE.getMessage(), trainingFilePath);
         } catch (IOException e) {
-            log.error("Failed to save training storage to file: {}", trainingFilePath, e);
+            log.error(LogMessages.FAILED_TO_SAVE_STORAGE.getMessage(), trainingFilePath, e);
         }
     }
 }
