@@ -45,7 +45,7 @@ class InMemoryTraineeStorageTest {
     }
 
     @Test
-    void testInit_FileNotEmpty() {
+    void testInit_FileNotEmpty_ListNotEmpty() {
         inMemoryTraineeStorage.init();
 
         assertEquals(2, inMemoryTraineeStorage.getAll().size());
@@ -64,7 +64,7 @@ class InMemoryTraineeStorageTest {
     }
 
     @Test
-    void testAddTrainee() {
+    void testAddTrainee_Successful() {
         Trainee addedTrainee = inMemoryTraineeStorage.add(trainee);
 
         assertEquals(3, inMemoryTraineeStorage.getAll().size());
@@ -73,7 +73,7 @@ class InMemoryTraineeStorageTest {
     }
 
     @Test
-    void testGetById() {
+    void testGetById_Successful() {
         Optional<Trainee> foundTrainee = inMemoryTraineeStorage.getById(1);
 
         assertTrue(foundTrainee.isPresent(), "Trainee should be present");
@@ -81,7 +81,7 @@ class InMemoryTraineeStorageTest {
     }
 
     @Test
-    void testUpdateTrainee() throws EntityNotFoundException {
+    void testUpdateTrainee_TraineeFound_Successful() throws EntityNotFoundException {
         Trainee trainee = inMemoryTraineeStorage.getById(2).get();
         String newAddress = "Odesa, st. Shevchenko";
         trainee.setAddress(newAddress);
@@ -92,16 +92,16 @@ class InMemoryTraineeStorageTest {
     }
 
     @Test
-    void testUpdateTrainee_NotFound_ThrowsException() {
+    void testUpdateTrainee_TraineeNotFound_ThrowsException() {
         trainee.setTraineeId(100);
 
         Exception ex = assertThrows(EntityNotFoundException.class, () -> inMemoryTraineeStorage.update(trainee));
-        assertEquals("Trainee with ID 100 does not exist.", ex.getMessage(), "Expected error message");
+        assertEquals("Trainee with ID 100 not found.", ex.getMessage(), "Expected error message");
 
     }
 
     @Test
-    void testDeleteById_Found_True() {
+    void testDeleteById_TraineeFound_True() {
         boolean isDeleted = inMemoryTraineeStorage.deleteById(2);
 
         assertTrue(isDeleted, "Trainee should be deleted");
@@ -109,7 +109,7 @@ class InMemoryTraineeStorageTest {
     }
 
     @Test
-    void testDeleteById_NotFound_False() {
+    void testDeleteById_TraineeNotFound_False() {
         boolean isDeleted = inMemoryTraineeStorage.deleteById(100);
 
         assertFalse(isDeleted, "Trainee should not be deleted, because it does not exist");
@@ -117,28 +117,28 @@ class InMemoryTraineeStorageTest {
     }
 
     @Test
-    void testGetByName_Found() {
+    void testGetByName_TraineeFound() {
         List<Trainee> result = inMemoryTraineeStorage.getByName("Kate.Gratilova");
 
         assertEquals(1, result.size(), "Should find one trainee");
     }
 
     @Test
-    void testGetByName_NotFound() {
+    void testGetByName_TraineeNotFound() {
         List<Trainee> result = inMemoryTraineeStorage.getByName("Olga.Gratilova");
 
         assertEquals(0, result.size(), "Should not find trainees");
     }
 
     @Test
-    void testGetAll() {
+    void testGetAll_Successful() {
         List<Trainee> result = inMemoryTraineeStorage.getAll();
 
         assertEquals(2, result.size(), "Should find 2 trainee");
     }
 
     @Test
-    void testAddTraining_TraineeFound() throws EntityNotFoundException {
+    void testAddTraining_TraineeFound_Successful() throws EntityNotFoundException {
         Training training = Training.builder().trainingId(1).traineeId(1).trainerId(1).build();
 
         inMemoryTraineeStorage.addTraining(1, training.getTrainingId());
