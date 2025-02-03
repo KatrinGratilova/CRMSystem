@@ -15,17 +15,16 @@ import java.util.List;
 @NoArgsConstructor
 @SuperBuilder
 public class Trainee extends User {
+    private long traineeId;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate dateOfBirth;
     private String address;
-    private long traineeId;
-    private List<Long> traineeTrainings;
+    private List<Long> traineeTrainings = new ArrayList<>();
 
-    public Trainee(String firstName, String lastName, String userName, String password, boolean isActive, LocalDate dateOfBirth, String address, long userId) {
+    public Trainee(String firstName, String lastName, String userName, String password, boolean isActive, LocalDate dateOfBirth, String address, long traineeId) {
         super(firstName, lastName, userName, password, isActive);
+        this.traineeId = traineeId;
         this.dateOfBirth = dateOfBirth;
         this.address = address;
-        this.traineeId = userId;
-        traineeTrainings = new ArrayList<>();
     }
 }
