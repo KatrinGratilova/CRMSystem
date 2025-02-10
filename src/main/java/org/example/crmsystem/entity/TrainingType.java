@@ -1,4 +1,4 @@
-package org.example.crmsystem.model;
+package org.example.crmsystem.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
