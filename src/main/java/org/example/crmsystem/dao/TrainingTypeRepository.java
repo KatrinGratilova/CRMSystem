@@ -34,21 +34,6 @@ public class TrainingTypeRepository {
         return traineeEntity;
     }
 
-//    public TrainingTypeEntity add1(TrainingTypeEntity traineeEntity) {
-//        Transaction transaction = null;
-//        try (Session session = sessionFactory.openSession()) {
-//            transaction = session.beginTransaction();
-//
-//                session.persist(traineeEntity);
-//
-//            transaction.commit();
-//        } catch (Exception e) {
-//            if (transaction != null) transaction.rollback();
-//            log.error(e.getMessage());
-//        }
-//        return traineeEntity;
-//    }
-
     public TrainingTypeEntity getById(int id) {
         try (Session session = sessionFactory.openSession()) {
             return session.get(TrainingTypeEntity.class, id);
