@@ -47,6 +47,8 @@ public class TrainerServiceTest {
                 .specialization(new TrainingTypeEntity(1, TrainingType.FITNESS))
                 .firstName("Andrew")
                 .lastName("Montgomery")
+                .userName("Andrew.Montgomery")
+                .password("1234")
                 .isActive(true)
                 .build();
     }

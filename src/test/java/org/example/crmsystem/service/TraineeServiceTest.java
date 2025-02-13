@@ -48,6 +48,8 @@ class TraineeServiceTest {
                 .address("Odesa, st. Bunina")
                 .firstName("Andrew")
                 .lastName("Montgomery")
+                .userName("Andrew.Montgomery")
+                .password("1234")
                 .isActive(true)
                 .build();
     }
