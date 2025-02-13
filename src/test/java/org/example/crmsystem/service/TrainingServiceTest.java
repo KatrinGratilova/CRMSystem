@@ -24,8 +24,6 @@ class TrainingServiceTest {
     @Mock
     private TrainingDAO trainingDAO;
     @Mock
-    private TraineeService traineeService;
-    @Mock
     private TrainerService trainerService;
     @InjectMocks
     private TrainingService trainingService;
