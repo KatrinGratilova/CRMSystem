@@ -84,9 +84,10 @@ public class TraineeService {
         log.debug(LogMessages.ATTEMPTING_TO_UPDATE_TRAINEE.getMessage(), traineeEntity.getId());
 
         if (authenticationService.isAuthenticated(traineeEntity.getId())) {
-            TraineeEntity updatedTraineeEntity;
+            TraineeEntity updatedTraineeEntity = traineeEntity;
             try {
-                updatedTraineeEntity = traineeRepository.update(traineeEntity);
+                if (validateTrainee(traineeEntity))
+                    updatedTraineeEntity = traineeRepository.update(traineeEntity);
             } catch (EntityNotFoundException e) {
                 log.warn(LogMessages.TRAINEE_NOT_FOUND.getMessage(), traineeEntity.getId());
                 throw e;
@@ -156,9 +157,11 @@ public class TraineeService {
             if (traineeEntity.getPassword().equals(oldPassword)) {
                 traineeEntity.setPassword(newPassword);
 
-                traineeRepository.update(traineeEntity);
-                log.info(LogMessages.TRAINEES_PASSWORD_CHANGED.getMessage(), id);
-                return true;
+                if (validateTrainee(traineeEntity)){
+                    traineeRepository.update(traineeEntity);
+                    log.info(LogMessages.TRAINEES_PASSWORD_CHANGED.getMessage(), id);
+                    return true;
+                }
             }
             log.warn(LogMessages.TRAINEES_PASSWORD_NOT_CHANGED.getMessage(), id);
             return false;
@@ -180,5 +183,9 @@ public class TraineeService {
             return trainings;
         }
         throw new UserIsNotAuthenticated(ExceptionMessages.USER_IS_NOT_AUTHENTICATED_WITH_USERNAME.format(traineeUserName));
+    }
+
+    private boolean validateTrainee(TraineeEntity traineeEntity){
+        return traineeEntity.getId() != 0 && traineeEntity.getFirstName() != null && traineeEntity.getLastName() != null && traineeEntity.getUserName() != null && traineeEntity.getPassword() != null;
     }
 }

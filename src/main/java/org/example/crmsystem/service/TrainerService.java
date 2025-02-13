@@ -84,9 +84,10 @@ public class TrainerService {
         log.debug(LogMessages.ATTEMPTING_TO_UPDATE_TRAINER.getMessage(), trainerEntity.getId());
 
         if (authenticationService.isAuthenticated(trainerEntity.getId())) {
-            TrainerEntity updatedTrainerEntity;
+            TrainerEntity updatedTrainerEntity = trainerEntity;
             try {
-                updatedTrainerEntity = trainerRepository.update(trainerEntity);
+                if (validateTrainer(trainerEntity))
+                    updatedTrainerEntity = trainerRepository.update(trainerEntity);
             } catch (EntityNotFoundException e) {
                 log.warn(LogMessages.TRAINER_NOT_FOUND.getMessage(), trainerEntity.getId());
                 throw e;
@@ -141,9 +142,12 @@ public class TrainerService {
             if (trainerEntity.getPassword().equals(oldPassword)) {
                 trainerEntity.setPassword(newPassword);
 
-                trainerRepository.update(trainerEntity);
-                log.info(LogMessages.TRAINERS_PASSWORD_CHANGED.getMessage(), trainerEntity.getId());
-                return true;
+                if (validateTrainer(trainerEntity)) {
+                    trainerRepository.update(trainerEntity);
+                    log.info(LogMessages.TRAINERS_PASSWORD_CHANGED.getMessage(), trainerEntity.getId());
+                    return true;
+                }
+                return false;
             }
             log.warn(LogMessages.TRAINERS_PASSWORD_NOT_CHANGED);
             return false;
@@ -164,5 +168,9 @@ public class TrainerService {
             return trainings;
         }
         throw new UserIsNotAuthenticated(ExceptionMessages.USER_IS_NOT_AUTHENTICATED_WITH_USERNAME.format(trainerUserName));
+    }
+
+    private boolean validateTrainer(TrainerEntity trainerEntity){
+        return trainerEntity.getId() != 0 && trainerEntity.getFirstName() != null && trainerEntity.getLastName() != null && trainerEntity.getUserName() != null && trainerEntity.getPassword() != null && trainerEntity.getSpecialization() != null;
     }
 }
