@@ -1,9 +1,13 @@
 package org.example.crmsystem.facade;
 
+import org.example.crmsystem.entity.*;
 import org.example.crmsystem.exception.EntityNotFoundException;
 import org.example.crmsystem.exception.IncompatibleSpecialization;
-import org.example.crmsystem.model.*;
-import org.example.crmsystem.service.*;
+import org.example.crmsystem.exception.UserIsNotAuthenticated;
+import org.example.crmsystem.messages.ExceptionMessages;
+import org.example.crmsystem.service.TraineeService;
+import org.example.crmsystem.service.TrainerService;
+import org.example.crmsystem.service.TrainingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -13,33 +17,28 @@ import org.mockito.MockitoAnnotations;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 class GymFacadeTest {
-
     @InjectMocks
     private GymFacade gymFacade;
-
     @Mock
     private TraineeService traineeService;
-
     @Mock
     private TrainerService trainerService;
-
     @Mock
     private TrainingService trainingService;
 
-    private Trainee trainee;
-    private Trainer trainer;
-    private Training training;
+    private TraineeEntity traineeEntity;
+    private TrainerEntity trainerEntity;
+    private TrainingEntity trainingEntity;
 
     @BeforeEach
     void setUp() {
-
         MockitoAnnotations.openMocks(this);
-        trainee = Trainee.builder()
-                .traineeId(1L)
+        traineeEntity = TraineeEntity.builder()
+                .id(1L)
                 .dateOfBirth(LocalDate.of(2000, 12, 12))
                 .address("Yk")
                 .firstName("Andrew")
@@ -47,101 +46,89 @@ class GymFacadeTest {
                 .isActive(true)
                 .build();
 
-        trainer = Trainer.builder()
-                .trainerId(2L)
+        trainerEntity = TrainerEntity.builder()
+                .id(2L)
                 .firstName("Bob")
                 .lastName("Ross")
-                .specialization(TrainingType.YOGA)
+                .specialization(new TrainingTypeEntity(1, TrainingType.YOGA))
                 .isActive(true)
                 .build();
 
-        training = Training.builder()
-                .trainingId(3L)
-                .traineeId(1L)
-                .trainerId(2L)
-                .trainingName("First Yoga Training")
+        trainingEntity = TrainingEntity.builder()
+                .id(3L)
+                .trainee(null)
+                .trainer(null)
+                .trainingName("First Yoga TrainingEntity")
                 .trainingDate(LocalDateTime.of(2024, 12, 12, 12, 0, 0))
-                .trainingType(TrainingType.YOGA)
-                .trainingTime(120)
+                .trainingType(new TrainingTypeEntity(1, TrainingType.YOGA))
+                .trainingDuration(120L)
                 .build();
     }
 
     @Test
     void testCreateTraineeProfile_Successful() {
-        when(traineeService.add(trainee)).thenReturn(trainee);
+        when(traineeService.createProfile(traineeEntity)).thenReturn(traineeEntity);
 
-        Trainee result = gymFacade.createTraineeProfile(trainee);
+        TraineeEntity result = gymFacade.createTraineeProfile(traineeEntity);
 
-        assertEquals(trainee, result);
-        verify(traineeService).add(trainee);
+        assertEquals(traineeEntity, result);
+        verify(traineeService).createProfile(traineeEntity);
     }
 
     @Test
     void testCreateTrainerProfile_Successful() {
-        when(trainerService.add(trainer)).thenReturn(trainer);
+        when(trainerService.createProfile(trainerEntity)).thenReturn(trainerEntity);
 
-        Trainer result = gymFacade.createTrainerProfile(trainer);
+        TrainerEntity result = gymFacade.createTrainerProfile(trainerEntity);
 
-        assertEquals(trainer, result);
-        verify(trainerService).add(trainer);
+        assertEquals(trainerEntity, result);
+        verify(trainerService).createProfile(trainerEntity);
     }
 
     @Test
     void testCreateTrainingProfile_Successful() {
-        when(trainingService.add(training)).thenReturn(training);
+        when(trainingService.add(trainingEntity)).thenReturn(trainingEntity);
 
-        Training result = gymFacade.createTrainingProfile(training);
+        TrainingEntity result = gymFacade.createTrainingProfile(trainingEntity);
 
-        assertEquals(training, result);
-        verify(trainingService).add(training);
+        assertEquals(trainingEntity, result);
+        verify(trainingService).add(trainingEntity);
     }
 
     @Test
-    void testPlanTraining_AllEntitiesExist_Successful() throws EntityNotFoundException, IncompatibleSpecialization {
-        long trainingId = 3L;
+    void testPlanTraining_AllEntitiesExist_Successful() throws UserIsNotAuthenticated, EntityNotFoundException, IncompatibleSpecialization {
         long traineeId = 1L;
         long trainerId = 2L;
 
-        when(trainingService.getById(trainingId)).thenReturn(training);
+        gymFacade.planTraining(trainingEntity, traineeEntity, trainerEntity);
 
-        gymFacade.planTraining(trainingId, traineeId, trainerId);
-
-        assertEquals(traineeId, training.getTraineeId());
-        assertEquals(trainerId, training.getTrainerId());
-        verify(trainingService).update(training);
-        verify(traineeService).addTraining(traineeId, trainingId);
-        verify(trainerService).addTraining(trainerId, trainingId);
+        assertEquals(traineeId, trainingEntity.getTrainee().getId());
+        assertEquals(trainerId, trainingEntity.getTrainer().getId());
+        verify(trainingService).update(trainingEntity);
     }
 
     @Test
-    void testPlanTraining_shouldHandleEntityNotFoundException() throws EntityNotFoundException {
+    void testPlanTraining_shouldHandleEntityNotFoundException() throws EntityNotFoundException, UserIsNotAuthenticated, IncompatibleSpecialization {
         long trainingId = 3L;
-        long traineeId = 1L;
-        long trainerId = 2L;
 
-        when(trainingService.getById(trainingId)).thenThrow(new EntityNotFoundException("Training not found"));
+        doThrow(new EntityNotFoundException(ExceptionMessages.TRAINING_NOT_FOUND.format(trainingId)))
+                .when(trainingService).update(any(TrainingEntity.class));
 
-        gymFacade.planTraining(trainingId, traineeId, trainerId);
+        gymFacade.planTraining(trainingEntity, traineeEntity, trainerEntity);
 
-        verify(trainingService).getById(trainingId);
-        verifyNoInteractions(traineeService);
-        verifyNoInteractions(trainerService);
+        verify(trainingService).update(trainingEntity);
     }
 
     @Test
-    void testPlanTraining_shouldHandleIncompatibleSpecializationException() throws EntityNotFoundException, IncompatibleSpecialization {
+    void testPlanTraining_shouldHandleIncompatibleSpecializationException() throws EntityNotFoundException, IncompatibleSpecialization, UserIsNotAuthenticated {
         long trainingId = 3L;
-        long traineeId = 1L;
         long trainerId = 2L;
 
-        when(trainingService.getById(trainingId)).thenReturn(training);
-        doThrow(new IncompatibleSpecialization("Specialization mismatch"))
-                .when(trainingService).update(training);
+        doThrow(new IncompatibleSpecialization(ExceptionMessages.INCOMPATIBLE_SPECIALIZATION.format(trainerId, trainingId)))
+                .when(trainingService).update(trainingEntity);
 
-        gymFacade.planTraining(trainingId, traineeId, trainerId);
+        gymFacade.planTraining(trainingEntity, traineeEntity, trainerEntity);
 
-        verify(trainingService).update(training);
-        verifyNoInteractions(traineeService);
-        verifyNoInteractions(trainerService);
+        verify(trainingService).update(trainingEntity);
     }
 }
