@@ -1,21 +1,26 @@
 package org.example.crmsystem.dao.interfaces;
 
+import org.example.crmsystem.entity.TraineeEntity;
+import org.example.crmsystem.entity.TrainingEntity;
 import org.example.crmsystem.exception.EntityNotFoundException;
-import org.example.crmsystem.model.Trainee;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-public interface TraineeDAO {
-    Trainee add(Trainee trainee);
+public interface TraineeDAO extends HavingUserName<TraineeEntity> {
+    TraineeEntity add(TraineeEntity traineeEntity);
 
-    Optional<Trainee> getById(long id);
+    Optional<TraineeEntity> getById(long id);
 
-    Trainee update(Trainee trainee) throws EntityNotFoundException;
+    TraineeEntity update(TraineeEntity traineeEntity) throws EntityNotFoundException;
 
-    boolean deleteById(long id);
+    void deleteByUserName(String userName);
 
-    List<Trainee> getByUserName(String userName);
+    boolean delete(TraineeEntity traineeEntity);
 
-    void addTraining(long traineeId, long trainingId) throws EntityNotFoundException;
+    boolean toggleActiveStatus(TraineeEntity traineeEntity) throws EntityNotFoundException;
+
+    List<TrainingEntity> getTraineeTrainingsByCriteria(
+            String traineeUserName, LocalDateTime fromDate, LocalDateTime toDate, String trainerName, String trainingType);
 }
