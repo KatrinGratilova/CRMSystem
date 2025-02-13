@@ -1,69 +1,76 @@
 package org.example.crmsystem.utils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.example.crmsystem.dao.*;
-import org.example.crmsystem.dao.interfaces.*;
-import org.example.crmsystem.model.*;
-import org.example.crmsystem.storage.*;
-import org.junit.jupiter.api.BeforeAll;
+import org.example.crmsystem.dao.interfaces.TraineeDAO;
+import org.example.crmsystem.dao.interfaces.TrainerDAO;
+import org.example.crmsystem.entity.TraineeEntity;
+import org.example.crmsystem.entity.TrainerEntity;
+import org.example.crmsystem.entity.UserEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
+import java.util.Collections;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class UsernameGeneratorTest {
-    private static final String TRAINEE_FILE_PATH = "src/test/resources/test_trainee_storage.json";
-    private static final String TRAINER_FILE_PATH = "src/test/resources/test_trainer_storage.json";
+    @Mock
+    private TraineeDAO traineeDAO;
 
-    private static UsernameGenerator usernameGenerator;
+    @Mock
+    private TrainerDAO trainerDAO;
 
-    private Trainee trainee;
-    private Trainer trainer;
-
-    @BeforeAll
-    static void setUpBeforeClass() {
-        ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        InMemoryTraineeStorage inMemoryTraineeStorage = new InMemoryTraineeStorage(mapper, TRAINEE_FILE_PATH);
-        InMemoryTrainerStorage inMemoryTrainerStorage = new InMemoryTrainerStorage(mapper, TRAINER_FILE_PATH);
-        inMemoryTraineeStorage.init();
-        inMemoryTrainerStorage.init();
-
-        TraineeDAO traineeDAO = new TraineeDAOImpl(inMemoryTraineeStorage, inMemoryTraineeStorage);
-        TrainerDAO trainerDAO = new TrainerDAOImpl(inMemoryTrainerStorage, inMemoryTrainerStorage);
-        usernameGenerator = new UsernameGenerator(traineeDAO, trainerDAO);
-    }
+    @InjectMocks
+    private UsernameGenerator usernameGenerator;
 
     @BeforeEach
     void setUp() {
-        trainee = Trainee.builder()
-                .dateOfBirth(LocalDate.of(2000, 12, 12))
-                .address("Odesa, st. Bunina")
-                .firstName("Andrew")
-                .lastName("Montgomery")
-                .isActive(true)
-                .build();
-        trainer = Trainer.builder()
-                .firstName("Bob")
-                .lastName("Ross")
-                .specialization(TrainingType.FITNESS)
-                .isActive(true)
-                .build();
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    void testGenerateUserName_ShouldGenerateUniqueUserNameWhenNoConflict() {
-        String generatedUserName = usernameGenerator.generateUserName(trainee);
+    void generateUserName_ShouldReturnBaseName_WhenNoDuplicatesExist() {
+        UserEntity user = new UserEntity();
+        user.setFirstName("John");
+        user.setLastName("Doe");
 
-        assertEquals("Andrew.Montgomery", generatedUserName, "Username should match expected format");
+        when(traineeDAO.getWhereUserNameStartsWith("John.Doe")).thenReturn(Collections.emptyList());
+        when(trainerDAO.getWhereUserNameStartsWith("John.Doe")).thenReturn(Collections.emptyList());
+
+        String generatedUsername = usernameGenerator.generateUserName(user);
+
+        assertEquals("John.Doe", generatedUsername);
+        verify(traineeDAO).getWhereUserNameStartsWith("John.Doe");
+        verify(trainerDAO).getWhereUserNameStartsWith("John.Doe");
     }
 
     @Test
-    void testGenerateUserName_ShouldGenerateUserNameWithSuffixWhenConflictExists() {
-        String generatedUserName = usernameGenerator.generateUserName(trainer);
+    void generateUserName_ShouldAppendNumber_WhenDuplicatesExist() {
+        UserEntity user = new UserEntity();
+        user.setFirstName("Jane");
+        user.setLastName("Smith");
 
-        assertEquals("Bob.Ross1", generatedUserName, "Username should have a numeric suffix");
+        when(traineeDAO.getWhereUserNameStartsWith("Jane.Smith")).thenReturn(List.of(TraineeEntity
+                .builder()
+                .userName("Jane.Smith")
+                .build()));
+        when(trainerDAO.getWhereUserNameStartsWith("Jane.Smith")).thenReturn(List.of(TrainerEntity
+                .builder()
+                .userName("Jane.Smith1")
+                .build()));
+
+        String generatedUsername = usernameGenerator.generateUserName(user);
+
+        assertEquals("Jane.Smith2", generatedUsername);
+        verify(traineeDAO).getWhereUserNameStartsWith("Jane.Smith");
+        verify(trainerDAO).getWhereUserNameStartsWith("Jane.Smith");
     }
 }
