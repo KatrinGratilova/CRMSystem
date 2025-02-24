@@ -1,17 +1,17 @@
 package org.example.crmsystem.dao.interfaces;
 
+import org.example.crmsystem.entity.TrainingEntity;
 import org.example.crmsystem.exception.EntityNotFoundException;
-import org.example.crmsystem.model.Training;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface TrainingDAO {
-    Training add(Training training);
+    TrainingEntity add(TrainingEntity trainingEntity);
 
-    Optional<Training> getById(long id);
+    Optional<TrainingEntity> getById(long id);
 
-    Training update(Training training) throws EntityNotFoundException;
+    List<TrainingEntity> getByName(String name);
 
-    List<Training> getByName(String name);
+    TrainingEntity update(TrainingEntity trainingEntity) throws EntityNotFoundException;
 }

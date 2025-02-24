@@ -1,9 +1,14 @@
 package org.example.crmsystem.facade;
 
+import org.example.crmsystem.entity.TraineeEntity;
+import org.example.crmsystem.entity.TrainerEntity;
+import org.example.crmsystem.entity.TrainingEntity;
 import org.example.crmsystem.exception.EntityNotFoundException;
 import org.example.crmsystem.exception.IncompatibleSpecialization;
-import org.example.crmsystem.model.*;
-import org.example.crmsystem.service.*;
+import org.example.crmsystem.exception.UserIsNotAuthenticated;
+import org.example.crmsystem.service.TraineeService;
+import org.example.crmsystem.service.TrainerService;
+import org.example.crmsystem.service.TrainingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -20,28 +25,26 @@ public class GymFacade {
         this.trainingService = trainingService;
     }
 
-    public Trainee createTraineeProfile(Trainee trainee) {
-        return traineeService.add(trainee);
+    public TraineeEntity createTraineeProfile(TraineeEntity traineeEntity) {
+        return traineeService.createProfile(traineeEntity);
     }
 
-    public Trainer createTrainerProfile(Trainer trainer) {
-        return trainerService.add(trainer);
+    public TrainerEntity createTrainerProfile(TrainerEntity trainerEntity) {
+        return trainerService.createProfile(trainerEntity);
     }
 
-    public Training createTrainingProfile(Training training) {
-        return trainingService.add(training);
+    public TrainingEntity createTrainingProfile(TrainingEntity trainingEntity) {
+        return trainingService.add(trainingEntity);
     }
 
-    public void planTraining(long trainingId, long traineeId, long trainerId) {
+    public void planTraining(TrainingEntity trainingEntity, TraineeEntity traineeEntity, TrainerEntity trainerEntity) {
         try {
-            Training training = trainingService.getById(trainingId);
-            training.setTraineeId(traineeId);
-            training.setTrainerId(trainerId);
-            trainingService.update(training);
+            trainingEntity.setTrainee(traineeEntity);
+            trainingEntity.setTrainer(trainerEntity);
 
-            traineeService.addTraining(traineeId, trainingId);
-            trainerService.addTraining(trainerId, trainingId);
-        } catch (EntityNotFoundException | IncompatibleSpecialization ex) {
+            trainingService.update(trainingEntity);
+
+        } catch (EntityNotFoundException | IncompatibleSpecialization | UserIsNotAuthenticated ex) {
             System.out.println(ex.getMessage());
         }
     }

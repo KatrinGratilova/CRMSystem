@@ -1,8 +1,11 @@
 package org.example.crmsystem.service;
 
 import org.example.crmsystem.dao.interfaces.TrainingDAO;
-import org.example.crmsystem.exception.*;
-import org.example.crmsystem.model.*;
+import org.example.crmsystem.entity.*;
+import org.example.crmsystem.exception.EntityNotFoundException;
+import org.example.crmsystem.exception.IncompatibleSpecialization;
+import org.example.crmsystem.exception.UserIsNotAuthenticated;
+import org.example.crmsystem.messages.ExceptionMessages;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,68 +13,58 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 @ExtendWith(MockitoExtension.class)
 class TrainingServiceTest {
-
     @Mock
     private TrainingDAO trainingDAO;
-
-    @Mock
-    private TraineeService traineeService;
-
     @Mock
     private TrainerService trainerService;
-
     @InjectMocks
     private TrainingService trainingService;
 
-    private Training training;
-    private Trainee trainee;
-    private Trainer trainer;
+    private TrainingEntity trainingEntity;
+    private TrainerEntity trainerEntity;
 
     @BeforeEach
     void setUp() {
-        training = Training.builder()
-                .trainingId(1L)
-                .trainingName("First Yoga Training")
+        trainingEntity = TrainingEntity.builder()
+                .id(1L)
+                .trainingName("First Yoga TrainingEntity")
                 .trainingDate(LocalDateTime.of(2024, 12, 12, 12, 0, 0))
-                .trainingType(TrainingType.YOGA)
-                .trainingTime(120)
+                .trainingType(new TrainingTypeEntity(1, TrainingType.YOGA))
+                .trainingDuration(120L)
                 .build();
-        trainee = Trainee.builder()
-                .traineeId(1L)
-                .build();
-        trainer = Trainer.builder()
-                .trainerId(2L)
-                .specialization(TrainingType.YOGA)
+        trainerEntity = TrainerEntity.builder()
+                .id(2L)
+                .specialization(new TrainingTypeEntity(1, TrainingType.YOGA))
                 .build();
     }
 
     @Test
     void testAddTraining_Successful() {
-        when(trainingDAO.add(training)).thenReturn(training);
+        when(trainingDAO.add(trainingEntity)).thenReturn(trainingEntity);
 
-        Training addedTraining = trainingService.add(training);
+        TrainingEntity addedTrainingEntity = trainingService.add(trainingEntity);
 
-        assertNotNull(addedTraining);
-        assertEquals(1L, addedTraining.getTrainingId());
-        verify(trainingDAO, times(1)).add(training);
+        assertNotNull(addedTrainingEntity);
+        assertEquals(1L, addedTrainingEntity.getId());
+        verify(trainingDAO, times(1)).add(trainingEntity);
     }
 
     @Test
     void testGetTrainingById_TrainingFound_Successful() throws EntityNotFoundException {
-        when(trainingDAO.getById(1L)).thenReturn(Optional.of(training));
+        when(trainingDAO.getById(1L)).thenReturn(Optional.of(trainingEntity));
 
-        Training result = trainingService.getById(1L);
+        TrainingEntity result = trainingService.getById(1L);
 
         assertNotNull(result);
-        assertEquals(1L, result.getTrainingId());
+        assertEquals(1L, result.getId());
         verify(trainingDAO, times(1)).getById(1L);
     }
 
@@ -81,86 +74,36 @@ class TrainingServiceTest {
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> trainingService.getById(100L));
 
-        assertEquals("Training with ID 100 not found.", exception.getMessage());
+        assertEquals(ExceptionMessages.TRAINING_NOT_FOUND.format(100L), exception.getMessage());
         verify(trainingDAO, times(1)).getById(100L);
     }
 
     @Test
-    void testUpdateTraining_EntitiesFound_Successful() throws EntityNotFoundException, IncompatibleSpecialization {
-        training.setTraineeId(1L);
-        training.setTrainerId(2L);
+    void testUpdateTraining_EntitiesFound_Successful() throws EntityNotFoundException, IncompatibleSpecialization, UserIsNotAuthenticated {
+        trainingEntity.setTrainer(trainerEntity);
 
-        when(traineeService.getById(1L)).thenReturn(trainee);
-        when(trainerService.getById(2L)).thenReturn(trainer);
-        when(trainingDAO.update(training)).thenReturn(training);
+        when(trainingDAO.update(trainingEntity)).thenReturn(trainingEntity);
+        when(trainerService.getById(2L)).thenReturn(trainerEntity);
 
-        Training updatedTraining = trainingService.update(training);
+        TrainingEntity updatedTrainingEntity = trainingService.update(trainingEntity);
 
-        assertNotNull(updatedTraining);
-        assertEquals(1L, updatedTraining.getTrainingId());
-        assertEquals(1L, updatedTraining.getTraineeId());
-        assertEquals(2L, updatedTraining.getTrainerId());
+        assertNotNull(updatedTrainingEntity);
+        assertEquals(1L, updatedTrainingEntity.getId());
 
-        verify(traineeService, times(1)).getById(1L);
-        verify(trainerService, times(2)).getById(2L);
-        verify(trainingDAO, times(1)).update(training);
-    }
-
-    @Test
-    void testUpdateTraining_TraineeNotFound_ThrowsEntityNotFoundException() throws EntityNotFoundException {
-        training.setTraineeId(1L);
-        training.setTrainerId(2L);
-
-        when(traineeService.getById(1L)).thenThrow(new EntityNotFoundException("Trainee with ID 1 not found"));
-
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> trainingService.update(training));
-
-        assertEquals("Cannot update training: trainee or trainer with such ID is not found.", exception.getMessage());
-        verify(traineeService, times(1)).getById(1L);
-        verify(trainingDAO, never()).update(training);
-    }
-
-    @Test
-    void testUpdateTraining_TrainerNotFound_ThrowsEntityNotFoundException() throws EntityNotFoundException {
-        training.setTraineeId(1L);
-        training.setTrainerId(2L);
-
-        when(trainerService.getById(2L)).thenThrow(new EntityNotFoundException("Trainer with ID 2 not found"));
-
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> trainingService.update(training));
-
-        assertEquals("Cannot update training: trainee or trainer with such ID is not found.", exception.getMessage());
+        verify(trainingDAO, times(1)).update(trainingEntity);
         verify(trainerService, times(1)).getById(2L);
-        verify(trainingDAO, never()).update(training);
     }
 
     @Test
-    void testUpdateTraining_TrainingNotFound_ThrowsEntityNotFoundException() throws EntityNotFoundException {
-        training.setTraineeId(1L);
-        training.setTrainerId(2L);
+    void testUpdateTraining_DifferentTrainerAndTrainingType_ThrowsIncompatibleSpecialization() throws EntityNotFoundException, UserIsNotAuthenticated {
+        trainerEntity.setSpecialization(new TrainingTypeEntity(2, TrainingType.PILATES));
+        trainingEntity.setTrainer(trainerEntity);
 
-        when(trainingDAO.update(training)).thenThrow(new EntityNotFoundException("Training with ID 1 does not exist."));
-        when(trainerService.getById(2L)).thenReturn(trainer);
+        when(trainerService.getById(2L)).thenReturn(trainerEntity);
 
+        IncompatibleSpecialization exception = assertThrows(IncompatibleSpecialization.class, () -> trainingService.update(trainingEntity));
 
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> trainingService.update(training));
-
-        assertEquals("Training with ID 1 does not exist.", exception.getMessage());
-        verify(trainingDAO, times(1)).update(training);
-    }
-
-    @Test
-    void testUpdateTraining_DifferentTrainerAndTrainingType_ThrowsIncompatibleSpecialization() throws EntityNotFoundException {
-        training.setTraineeId(1L);
-        training.setTrainerId(2L);
-
-        when(traineeService.getById(1L)).thenReturn(trainee);
-        trainer.setSpecialization(TrainingType.PILATES);
-        when(trainerService.getById(2L)).thenReturn(trainer);
-
-        IncompatibleSpecialization exception = assertThrows(IncompatibleSpecialization.class, () -> trainingService.update(training));
-
-        assertEquals("Incompatible specialization for trainer with ID 2 while adding training with ID 1.", exception.getMessage());
-        verify(trainingDAO, never()).update(training);
+        assertEquals(ExceptionMessages.INCOMPATIBLE_SPECIALIZATION.format(2L, 1L), exception.getMessage());
+        verify(trainingDAO, never()).update(trainingEntity);
     }
 }
