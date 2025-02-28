@@ -1,7 +1,7 @@
 package org.example.crmsystem.dao;
 
-import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.example.crmsystem.dao.interfaces.TrainerDAO;
 import org.example.crmsystem.dao.queries.TrainerQueries;
@@ -14,7 +14,6 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -24,13 +23,9 @@ import java.util.Optional;
 
 @Repository
 @Log4j2
+@RequiredArgsConstructor
 public class TrainerRepositoryImpl implements TrainerDAO {
     private final SessionFactory sessionFactory;
-
-    @Autowired
-    public TrainerRepositoryImpl(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
-    }
 
     @Override
     public TrainerEntity add(TrainerEntity trainerEntity) {
@@ -61,6 +56,7 @@ public class TrainerRepositoryImpl implements TrainerDAO {
             query.setParameter("userName", userName);
 
             List<TrainerEntity> resultList = query.getResultList();
+            System.out.println(resultList);
             return resultList.isEmpty() ? Optional.empty() : Optional.of(resultList.get(0));
         }
     }
@@ -76,17 +72,55 @@ public class TrainerRepositoryImpl implements TrainerDAO {
     }
 
     @Override
-    public TrainerEntity update(TrainerEntity trainerEntity) throws EntityNotFoundException {
+    public TrainerEntity update(TrainerEntity trainerModified) throws EntityNotFoundException {
+        Transaction transaction = null;
+        TrainerEntity trainer = null;
+
+        try (Session session = sessionFactory.openSession()) {
+            transaction = session.beginTransaction();
+
+            long id = trainerModified.getId();
+
+            Optional<TrainerEntity> trainerOptional = getByUserName(trainerModified.getUserName());
+
+            if (trainerOptional.isPresent()) {
+                trainer = trainerOptional.get();
+
+                trainer.setFirstName(trainerModified.getFirstName());
+                trainer.setLastName(trainerModified.getLastName());
+                trainer.setSpecialization(trainerModified.getSpecialization());
+                trainer.setActive(trainerModified.isActive());
+
+                session.merge(trainer);
+            } else
+                throw new EntityNotFoundException(ExceptionMessages.TRAINER_NOT_FOUND.format(id));
+            transaction.commit();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            if (transaction != null) transaction.rollback();
+        }
+        return trainer;
+    }
+
+    @Override
+    public TrainerEntity updatePassword(TrainerEntity trainerEntity) throws EntityNotFoundException {
         Transaction transaction = null;
 
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
+
             long id = trainerEntity.getId();
 
-            if (getById(id).isPresent() && id != 0)
+            Optional<TrainerEntity> traineeOptional = getByUserName(trainerEntity.getUserName());
+
+            if (traineeOptional.isPresent()) {
+                TrainerEntity savedTrainee = traineeOptional.get();
+
+                trainerEntity.setId(savedTrainee.getId());
                 session.merge(trainerEntity);
+            }
             else
-                throw new EntityNotFoundException(ExceptionMessages.TRAINER_NOT_FOUND.format(id));
+                throw new EntityNotFoundException(ExceptionMessages.TRAINEE_NOT_FOUND.format(id));
             transaction.commit();
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -96,21 +130,24 @@ public class TrainerRepositoryImpl implements TrainerDAO {
     }
 
     @Override
-    public boolean toggleActiveStatus(TrainerEntity trainerEntity) throws EntityNotFoundException{
+    public boolean toggleActiveStatus(String username, boolean isActive) throws EntityNotFoundException {
         Transaction transaction = null;
 
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
 
-            TrainerEntity trainee = session.find(TrainerEntity.class, trainerEntity.getId());
-            if (trainee != null) {
-                trainee.setActive(!trainee.isActive());
-                session.merge(trainee);
+            Optional<TrainerEntity> trainerOptional = getByUserName(username);
+            TrainerEntity trainer;
+            //TrainerEntity trainee = session.find(TrainerEntity.class, trainerEntity.getId());
+            if (trainerOptional.isPresent()) {
+                trainer = trainerOptional.get();
+                trainer.setActive(isActive);
+                session.merge(trainer);
 
                 transaction.commit();
                 return true;
             } else {
-                throw new EntityNotFoundException(ExceptionMessages.TRAINER_NOT_FOUND.format(trainerEntity.getId()));
+                throw new EntityNotFoundException(ExceptionMessages.TRAINER_NOT_FOUND_BY_USERNAME.format(username));
             }
 
         } catch (Exception e) {
@@ -120,27 +157,27 @@ public class TrainerRepositoryImpl implements TrainerDAO {
         }
     }
 
-    @Override
-    public List<TrainerEntity> getTrainersNotAssignedToTrainee(String traineeUserName) {
-        Transaction transaction = null;
-        List<TrainerEntity> result = new ArrayList<>();
-
-        try (Session session = sessionFactory.openSession()) {
-            transaction = session.beginTransaction();
-
-            TypedQuery<TrainerEntity> query = session.createQuery(TrainerQueries.GET_TRAINERS_NOT_ASSIGNED_TO_TRAINEE.getQuery(), TrainerEntity.class);
-            query.setParameter("traineeUserName", traineeUserName);
-
-            result = query.getResultList();
-            transaction.commit();
-        } catch (Exception e) {
-            System.out.println(1);
-            if (transaction != null) transaction.rollback();
-            log.error(e.getMessage());
-        }
-
-        return result;
-    }
+//    @Override
+//    public List<TrainerEntity> getTrainersNotAssignedToTrainee(String traineeUserName) {
+//        Transaction transaction = null;
+//        List<TrainerEntity> result = new ArrayList<>();
+//
+//        try (Session session = sessionFactory.openSession()) {
+//            transaction = session.beginTransaction();
+//
+//            TypedQuery<TrainerEntity> query = session.createQuery(TrainerQueries.GET_TRAINERS_NOT_ASSIGNED_TO_TRAINEE.getQuery(), TrainerEntity.class);
+//            query.setParameter("traineeUserName", traineeUserName);
+//
+//            result = query.getResultList();
+//            transaction.commit();
+//        } catch (Exception e) {
+//            System.out.println(1);
+//            if (transaction != null) transaction.rollback();
+//            log.error(e.getMessage());
+//        }
+//
+//        return result;
+//    }
 
     public List<TrainingEntity> getTrainerTrainingsByCriteria(
             String trainerUserName, LocalDateTime fromDate, LocalDateTime toDate, String traineeName) {
@@ -159,9 +196,9 @@ public class TrainerRepositoryImpl implements TrainerDAO {
             predicates.add(cb.equal(trainerJoin.get("userName"), trainerUserName));
 
             if (fromDate != null)
-                predicates.add(cb.greaterThanOrEqualTo(root.get("date"), fromDate));
+                predicates.add(cb.greaterThanOrEqualTo(root.get("trainingDate"), fromDate));
             if (toDate != null)
-                predicates.add(cb.lessThanOrEqualTo(root.get("date"), toDate));
+                predicates.add(cb.lessThanOrEqualTo(root.get("trainingDate"), toDate));
 
             if (traineeName != null && !traineeName.isEmpty()) {
                 Join<TrainingEntity, TraineeEntity> traineeJoin = root.join("trainee");

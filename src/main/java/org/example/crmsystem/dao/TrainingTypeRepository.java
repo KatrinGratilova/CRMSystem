@@ -8,6 +8,8 @@ import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 @Log4j2
 public class TrainingTypeRepository {
@@ -37,6 +39,12 @@ public class TrainingTypeRepository {
     public TrainingTypeEntity getById(int id) {
         try (Session session = sessionFactory.openSession()) {
             return session.get(TrainingTypeEntity.class, id);
+        }
+    }
+
+    public List<TrainingTypeEntity> getAll() {
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery("FROM TrainingTypeEntity", TrainingTypeEntity.class).list();
         }
     }
 }

@@ -4,9 +4,9 @@ import jakarta.persistence.TypedQuery;
 import lombok.extern.log4j.Log4j2;
 import org.example.crmsystem.dao.interfaces.TrainingDAO;
 import org.example.crmsystem.dao.queries.TrainingQueries;
+import org.example.crmsystem.entity.TraineeEntity;
+import org.example.crmsystem.entity.TrainerEntity;
 import org.example.crmsystem.entity.TrainingEntity;
-import org.example.crmsystem.exception.EntityNotFoundException;
-import org.example.crmsystem.messages.ExceptionMessages;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -26,20 +26,20 @@ public class TrainingRepositoryImpl implements TrainingDAO {
         this.sessionFactory = sessionFactory;
     }
 
-    @Override
-    public TrainingEntity add(TrainingEntity trainingEntity) {
-        Transaction transaction = null;
-
-        try (Session session = sessionFactory.openSession()) {
-            transaction = session.beginTransaction();
-            session.persist(trainingEntity);
-            transaction.commit();
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            if (transaction != null) transaction.rollback();
-        }
-        return trainingEntity;
-    }
+//    @Override
+//    public TrainingEntity add(TrainingEntity trainingEntity) {
+//        Transaction transaction = null;
+//
+//        try (Session session = sessionFactory.openSession()) {
+//            transaction = session.beginTransaction();
+//            session.persist(trainingEntity);
+//            transaction.commit();
+//        } catch (Exception e) {
+//            log.error(e.getMessage());
+//            if (transaction != null) transaction.rollback();
+//        }
+//        return trainingEntity;
+//    }
 
     @Override
     public Optional<TrainingEntity> getById(long id) {
@@ -58,22 +58,31 @@ public class TrainingRepositoryImpl implements TrainingDAO {
     }
 
     @Override
-    public TrainingEntity update(TrainingEntity trainingEntity) throws EntityNotFoundException {
+    public TrainingEntity add(TrainingEntity trainingEntity) {
         Transaction transaction = null;
 
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
-            long id = trainingEntity.getId();
 
-            if (getById(id).isPresent() && id != 0) {
-                session.merge(trainingEntity);
-                if (trainingEntity.getTrainee() != null)
-                    session.merge(trainingEntity.getTrainee());
-            } else
-                throw new EntityNotFoundException(ExceptionMessages.TRAINING_NOT_FOUND.format(id));
+            TraineeEntity trainee = session.find(TraineeEntity.class, trainingEntity.getTrainee().getId());
+            TrainerEntity trainer = session.find(TrainerEntity.class, trainingEntity.getTrainer().getId());
+
+            trainee.getTrainers().add(trainingEntity.getTrainer());
+            trainer.getTrainees().add(trainingEntity.getTrainee());
+
+            trainingEntity.setTrainee(session.merge(trainee));
+            trainingEntity.setTrainer(session.merge(trainer));
+
+            session.persist(trainingEntity);
+//            session.persist(trainingEntity);
+
+//            if (trainingEntity.getTrainee() != null)
+//                session.merge(trainingEntity.getTrainee());
+
+//            System.out.println(trainingEntity);
             transaction.commit();
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error(e.getStackTrace());
             if (transaction != null) transaction.rollback();
         }
         return trainingEntity;

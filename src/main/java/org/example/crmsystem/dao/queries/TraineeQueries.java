@@ -20,6 +20,13 @@ public enum TraineeQueries {
             DELETE FROM TraineeEntity t
             WHERE t.userName
             LIKE :userName
+            """),
+    GET_TRAINERS_NOT_ASSIGNED_TO_TRAINEE("""
+                FROM TrainerEntity t
+                WHERE t NOT IN (
+                SELECT tr FROM TraineeEntity te
+                JOIN te.trainers tr
+                WHERE te.userName = :traineeUserName)
             """);
     
     private final String query;
