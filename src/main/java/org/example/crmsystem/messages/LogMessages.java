@@ -75,11 +75,14 @@ public enum LogMessages {
 
     ATTEMPTING_TO_CHANGE_TRAINEES_PASSWORD("Attempting to change trainees password with ID: {}"),
     ATTEMPTING_TO_CHANGE_TRAINERS_PASSWORD("Attempting to change trainers password with ID: {}"),
+    ATTEMPTING_TO_CHANGE_USER_PASSWORD("Attempting to change user password with username: {}"),
 
     TRAINEES_PASSWORD_CHANGED("Trainees password with id {} changed successfully."),
     TRAINERS_PASSWORD_CHANGED("Trainers password with id {} changed successfully."),
+    USER_PASSWORD_CHANGED("User password with username {} changed successfully."),
     TRAINEES_PASSWORD_NOT_CHANGED("Trainee password with id {} wasn't changed."),
     TRAINERS_PASSWORD_NOT_CHANGED("Trainers password with id {} wasn't changed."),
+    USER_PASSWORD_NOT_CHANGED("User password with username {} wasn't changed."),
 
     ATTEMPTING_TO_CHANGE_TRAINEES_STATUS("Attempting to change trainees status with ID: {}"),
     ATTEMPTING_TO_CHANGE_TRAINERS_STATUS("Attempting to change trainers status with ID: {}"),

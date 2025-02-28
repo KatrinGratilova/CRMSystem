@@ -8,6 +8,7 @@ import lombok.Getter;
 public enum ExceptionMessages {
     TRAINEE_NOT_FOUND("TraineeEntity with ID %d not found."),
     TRAINEE_NOT_FOUND_BY_USERNAME("TraineeEntity with userName %s not found."),
+    USER_NOT_FOUND_BY_USERNAME("User with username %s not found."),
     TRAINER_NOT_FOUND("TrainerEntity with ID %d not found."),
     TRAINER_NOT_FOUND_BY_USERNAME("TrainerEntity with userName %s not found."),
     TRAINING_NOT_FOUND("TrainingEntity with ID %d not found."),
