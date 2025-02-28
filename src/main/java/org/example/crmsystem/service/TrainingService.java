@@ -1,11 +1,11 @@
 package org.example.crmsystem.service;
 
 import lombok.extern.log4j.Log4j2;
+import org.example.crmsystem.converter.TrainingConverter;
 import org.example.crmsystem.dao.interfaces.TrainingDAO;
+import org.example.crmsystem.dto.training.TrainingServiceDTO;
 import org.example.crmsystem.entity.TrainingEntity;
 import org.example.crmsystem.exception.EntityNotFoundException;
-import org.example.crmsystem.exception.IncompatibleSpecialization;
-import org.example.crmsystem.exception.UserIsNotAuthenticated;
 import org.example.crmsystem.messages.ExceptionMessages;
 import org.example.crmsystem.messages.LogMessages;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,13 +25,13 @@ public class TrainingService {
         this.trainerService = trainerService;
     }
 
-    public TrainingEntity add(TrainingEntity trainingEntity) {
-        log.debug(LogMessages.ATTEMPTING_TO_ADD_NEW_TRAINING.getMessage(), trainingEntity.getTrainingName());
+    public TrainingServiceDTO add(TrainingServiceDTO trainingDTO) {
+        log.debug(LogMessages.ATTEMPTING_TO_ADD_NEW_TRAINING.getMessage(), trainingDTO.getTrainingName());
 
-        trainingEntity = trainingRepository.add(trainingEntity);
+        TrainingEntity trainingEntity = trainingRepository.add(TrainingConverter.toEntity(trainingDTO));
 
         log.info(LogMessages.ADDED_NEW_TRAINING.getMessage(), trainingEntity.getId());
-        return trainingEntity;
+        return TrainingConverter.toServiceDTO(trainingEntity);
     }
 
     public TrainingEntity getById(long id) throws EntityNotFoundException {
@@ -47,30 +47,30 @@ public class TrainingService {
         }
     }
 
-    public TrainingEntity update(TrainingEntity trainingEntity) throws EntityNotFoundException, IncompatibleSpecialization, UserIsNotAuthenticated {
-        log.debug(LogMessages.ATTEMPTING_TO_UPDATE_TRAINING.getMessage(), trainingEntity.getId());
-        long trainingId = trainingEntity.getId();
-        long trainerId = trainingEntity.getTrainer().getId();
+//    public TrainingEntity update(TrainingEntity trainingEntity) throws EntityNotFoundException, IncompatibleSpecialization, UserIsNotAuthenticated {
+//        log.debug(LogMessages.ATTEMPTING_TO_UPDATE_TRAINING.getMessage(), trainingEntity.getId());
+//        long trainingId = trainingEntity.getId();
+//        long trainerId = trainingEntity.getTrainer().getId();
+//
+//        if (!trainerService.getById(trainerId).getSpecialization().equals(trainingEntity.getTrainingType())) {
+//            log.error(LogMessages.INCOMPATIBLE_SPECIALIZATION.getMessage(), trainerId, trainingId);
+//            throw new IncompatibleSpecialization(ExceptionMessages.INCOMPATIBLE_SPECIALIZATION.format(trainerId, trainingId));
+//        }
+//
+//        TrainingEntity updatedTrainingEntity = trainingEntity;
+//        try {
+//            if (validateTraining(trainingEntity))
+//                updatedTrainingEntity = trainingRepository.update(trainingEntity);
+//        } catch (EntityNotFoundException e) {
+//            log.warn(LogMessages.TRAINING_NOT_FOUND.getMessage(), trainingId);
+//            throw e;
+//        }
+//
+//        log.info(LogMessages.UPDATED_TRAINING.getMessage(), updatedTrainingEntity.getId());
+//        return updatedTrainingEntity;
+//    }
 
-        if (!trainerService.getById(trainerId).getSpecialization().equals(trainingEntity.getTrainingType())) {
-            log.error(LogMessages.INCOMPATIBLE_SPECIALIZATION.getMessage(), trainerId, trainingId);
-            throw new IncompatibleSpecialization(ExceptionMessages.INCOMPATIBLE_SPECIALIZATION.format(trainerId, trainingId));
-        }
-
-        TrainingEntity updatedTrainingEntity = trainingEntity;
-        try {
-            if (validateTraining(trainingEntity))
-                updatedTrainingEntity = trainingRepository.update(trainingEntity);
-        } catch (EntityNotFoundException e) {
-            log.warn(LogMessages.TRAINING_NOT_FOUND.getMessage(), trainingId);
-            throw e;
-        }
-
-        log.info(LogMessages.UPDATED_TRAINING.getMessage(), updatedTrainingEntity.getId());
-        return updatedTrainingEntity;
-    }
-
-    private boolean validateTraining(TrainingEntity trainingEntity) {
-        return trainingEntity.getTrainingName() != null && trainingEntity.getTrainingType() != null && trainingEntity.getTrainingDate() != null && trainingEntity.getTrainingDuration() != 0;
-    }
+//    private boolean validateTraining(TrainingEntity trainingEntity) {
+//        return trainingEntity.getTrainingName() != null && trainingEntity.getTrainingType() != null && trainingEntity.getTrainingDate() != null && trainingEntity.getTrainingDuration() != 0;
+//    }
 }
