@@ -21,11 +21,11 @@ public class TrainingEntity {
     @Column(name = "training_id")
     private long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @JoinColumn(name = "trainee_id")
     private TraineeEntity trainee;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @JoinColumn(name = "trainer_id")
     private TrainerEntity trainer;
 
@@ -47,7 +47,7 @@ public class TrainingEntity {
         return "TrainingEntity{" +
                 "id=" + id +
                 ", trainee=" + (trainee != null ? trainee.getId() : "null") +
-                ", trainer=" + (trainer != null ? trainer.getId() : "null") +
+                ", trainer=" + (trainer != null ? trainer.getUserName() : "null") +
                 ", trainingName='" + trainingName + '\'' +
                 ", trainingType=" + trainingType +
                 ", trainingDate=" + trainingDate +
@@ -57,6 +57,9 @@ public class TrainingEntity {
 
     @PrePersist
     protected void onCreate() {
-        if (trainee != null && trainer != null) trainee.addTrainer(trainer);
+//        if (trainee != null && trainer != null) {
+//            trainee.addTrainer(trainer);
+//            trainer.addTrainee(trainee);
+//        }
     }
 }

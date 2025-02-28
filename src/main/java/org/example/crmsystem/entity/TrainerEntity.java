@@ -39,6 +39,10 @@ public class TrainerEntity extends UserEntity {
         if (trainings.isEmpty()) trainings = new ArrayList<>();
     }
 
+    public void addTrainee(TraineeEntity trainee) {
+        trainees.add(trainee);
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
