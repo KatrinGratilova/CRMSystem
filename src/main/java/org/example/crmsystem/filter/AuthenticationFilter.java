@@ -5,6 +5,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.example.crmsystem.messages.ExceptionMessages;
 import org.example.crmsystem.service.AuthenticationService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -15,12 +17,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Component
+@RequiredArgsConstructor
 public class AuthenticationFilter extends OncePerRequestFilter {
     private final AuthenticationService authenticationService;
-
-    public AuthenticationFilter(AuthenticationService authenticationService) {
-        this.authenticationService = authenticationService;
-    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -28,7 +27,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         CachedBodyHttpServletRequest wrappedRequest = new CachedBodyHttpServletRequest(request);
 
         String path = wrappedRequest.getRequestURI();
-        if (path.startsWith("/login") || request.getMethod().equalsIgnoreCase("POST")) {
+        if (path.equals("/login") || request.getMethod().equalsIgnoreCase("POST")) {
             filterChain.doFilter(wrappedRequest, response);
             return;
         }
@@ -36,7 +35,14 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         String username = extractUsername(wrappedRequest);
 
         if (username == null || !authenticationService.isAuthenticated(username)) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User is not authenticated");
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+            String errorMessage = ExceptionMessages.USER_IS_NOT_AUTHENTICATED_WITH_USERNAME.format(username);
+
+            response.getWriter().write(errorMessage);
+            response.getWriter().flush();
             return;
         }
 
@@ -60,6 +66,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String, Object> body = objectMapper.readValue(requestBody, Map.class);
 
+            System.out.println(body);
             if (body.containsKey("username")) {
                 username = body.get("username").toString();
                 return username;
