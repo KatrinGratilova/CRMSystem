@@ -3,7 +3,8 @@ package org.example.crmsystem.controller;
 import lombok.RequiredArgsConstructor;
 import org.example.crmsystem.dto.user.UserChangeLoginDTO;
 import org.example.crmsystem.dto.user.UserCredentialsDTO;
-import org.example.crmsystem.exception.EntityNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
+import org.example.crmsystem.exception.UserIsNotAuthenticated;
 import org.example.crmsystem.service.AuthenticationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,7 @@ public class AuthenticationController {
     }
 
     @PutMapping("/change-password")
-    public ResponseEntity<String> changePassword(@RequestBody UserChangeLoginDTO user) throws EntityNotFoundException {
+    public ResponseEntity<String> changePassword(@RequestBody UserChangeLoginDTO user) throws EntityNotFoundException, UserIsNotAuthenticated {
         boolean isChanged = authenticationService.changePassword(user.getUsername(), user.getOldPassword(), user.getNewPassword());
 
         if (isChanged) {
@@ -35,5 +36,4 @@ public class AuthenticationController {
             return ResponseEntity.status(400).body("Old password is incorrect or user not found");
         }
     }
-
 }
