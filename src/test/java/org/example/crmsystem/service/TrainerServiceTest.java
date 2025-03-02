@@ -91,7 +91,6 @@ public class TrainerServiceTest {
         trainerEntity.setUserName(userName);
         when(trainerDAO.getByUserName(userName)).thenReturn(Optional.of(trainerEntity));
 
-
         TrainerServiceDTO result = trainerService.getByUsername(userName);
 
         assertNotNull(result);
@@ -106,7 +105,6 @@ public class TrainerServiceTest {
         String userName = "Andrew.Montgomery";
         when(trainerDAO.getByUserName(userName)).thenReturn(Optional.empty());
 
-
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
                 () -> trainerService.getByUsername(userName));
 
@@ -117,7 +115,6 @@ public class TrainerServiceTest {
     @Test
     void testUpdate_TrainerFound_Successful() throws EntityNotFoundException {
         when(trainerDAO.update(trainerEntity)).thenReturn(trainerEntity);
-
 
         TrainerServiceDTO result = trainerService.update(trainerDTO);
 
@@ -146,8 +143,7 @@ public class TrainerServiceTest {
         assertTrue(result);
         verify(trainerDAO, times(1)).toggleActiveStatus(username, true);
     }
-
-
+    
     @Test
     void testToggleActiveStatus_TrainerNotFound_ThrowsEntityNotFoundException() throws EntityNotFoundException {
         when(trainerDAO.toggleActiveStatus(username, true)).thenThrow(new EntityNotFoundException(ExceptionMessages.TRAINER_NOT_FOUND.format(0, username)));
