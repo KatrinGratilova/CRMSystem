@@ -35,17 +35,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<String> handleUserIsNotAuthenticated(EntityNotFoundException ex) {
+    public ResponseEntity<String> handleEntityNotFound(EntityNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ex.getMessage());
     }
-
-//    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
-//    public ResponseEntity<String> handleNotFound(ResponseStatusException ex) {
-//        if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                    .body("Page is not found.");
-//        }
-//        return ResponseEntity.status(ex.getStatusCode()).body(ex.getReason());
-//    }
 }
