@@ -18,7 +18,7 @@ public interface TraineeDAO extends HavingUserName<TraineeEntity> {
 
     TraineeEntity updateTrainers(TraineeEntity traineeModified) throws EntityNotFoundException;
 
-    TraineeEntity updatePassword(TraineeEntity traineeEntity) throws EntityNotFoundException;
+    void updatePassword(TraineeEntity traineeEntity) throws EntityNotFoundException;
 
     void deleteByUserName(String userName);
 

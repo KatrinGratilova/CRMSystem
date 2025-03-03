@@ -1,5 +1,6 @@
 package org.example.crmsystem.dto.trainer.request;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -12,5 +13,6 @@ import org.example.crmsystem.entity.TrainingTypeEntity;
 @NoArgsConstructor
 @SuperBuilder
 public class TrainerUpdateRequestDTO extends UserUpdateDTO {
+    @NotNull(message = "Specialization is required.")
     private TrainingTypeEntity specialization;
 }

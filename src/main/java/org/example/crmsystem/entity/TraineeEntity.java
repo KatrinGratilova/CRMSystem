@@ -29,9 +29,6 @@ public class TraineeEntity extends UserEntity {
     private List<TrainingEntity> trainings = new ArrayList<>();
 
     @ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
-//    @JoinTable(name = "trainings",
-//            joinColumns = @JoinColumn(name = "trainee_id"),
-//            inverseJoinColumns = @JoinColumn(name = "trainer_id"))
     private List<TrainerEntity> trainers = new ArrayList<>();
 
     public TraineeEntity(long userId, String firstName, String lastName, String userName, String password, boolean isActive, LocalDate dateOfBirth, String address) {
@@ -63,9 +60,5 @@ public class TraineeEntity extends UserEntity {
     protected void onCreate() {
         if (trainers.isEmpty()) trainers = new ArrayList<>();
         if (trainings.isEmpty()) trainings = new ArrayList<>();
-    }
-
-    public void addTrainer(TrainerEntity trainer) {
-        trainers.add(trainer);
     }
 }

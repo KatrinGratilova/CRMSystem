@@ -15,7 +15,7 @@ public interface TrainerDAO extends HavingUserName<TrainerEntity> {
 
     TrainerEntity update(TrainerEntity trainerEntity) throws EntityNotFoundException;
 
-    TrainerEntity updatePassword(TrainerEntity trainerEntity) throws EntityNotFoundException;
+    void updatePassword(TrainerEntity trainerEntity) throws EntityNotFoundException;
 
     boolean toggleActiveStatus(String username, boolean isActive) throws EntityNotFoundException;
 

@@ -29,6 +29,7 @@ public class TrainingController {
     @Operation(summary = "Register a new training", description = "Creates a new training in the system")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Successfully registered a new training"),
+            @ApiResponse(responseCode = "404", description = "Trainer or trainee not found"),
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
     public ResponseEntity<HttpStatus> addTraining(@Valid @RequestBody TrainingAddRequestDTO training) throws UserIsNotAuthenticated, EntityNotFoundException {

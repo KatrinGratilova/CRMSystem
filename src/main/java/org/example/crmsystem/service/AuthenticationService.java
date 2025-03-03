@@ -39,15 +39,20 @@ public class AuthenticationService {
         return false;
     }
 
-    public boolean isAuthenticated(String username) throws UserIsNotAuthenticated {
+    public boolean isAuthenticated(String username) {
         String transactionId = ThreadContext.get("transactionId");
         boolean isAuthenticated = authenticatedUsers.containsValue(username);
 
         if (isAuthenticated)
             log.info(LogMessages.USER_IS_AUTHENTICATED.getMessage(), transactionId, username);
-        else
-            log.warn(LogMessages.USER_IS_NOT_AUTHENTICATED.getMessage(), transactionId, username);
-
+        else {
+            if (traineeDAO.getByUserName(username).isPresent())
+                log.warn(LogMessages.USER_IS_NOT_AUTHENTICATED.getMessage(), transactionId, username);
+            else {
+                log.warn(LogMessages.USER_DOES_NOT_EXIST.getMessage(), transactionId, username);
+                throw new EntityNotFoundException(ExceptionMessages.USER_NOT_FOUND_BY_USERNAME.format(username));
+            }
+        }
         return isAuthenticated;
     }
 

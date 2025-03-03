@@ -15,7 +15,6 @@ public enum ExceptionMessages {
 
     CANNOT_UPDATE_TRAINING("Cannot update training: trainee or trainer with such ID is not found."),
     INCOMPATIBLE_SPECIALIZATION("Incompatible specialization for trainer with ID %d while adding training with ID %d."),
-    USER_IS_NOT_AUTHENTICATED("User with id %d is not authenticated."),
     USER_IS_NOT_AUTHENTICATED_WITH_USERNAME("User with userName %s is not authenticated."),
 
     TRAINEE_WITH_USERNAME_IS_NOT_FOUND("Trainee with userName %s is not found."),

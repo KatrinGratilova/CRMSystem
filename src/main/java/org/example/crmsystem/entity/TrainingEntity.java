@@ -54,12 +54,4 @@ public class TrainingEntity {
                 ", trainingDuration=" + trainingDuration +
                 '}';
     }
-
-    @PrePersist
-    protected void onCreate() {
-//        if (trainee != null && trainer != null) {
-//            trainee.addTrainer(trainer);
-//            trainer.addTrainee(trainee);
-//        }
-    }
 }

@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.example.crmsystem.converter.TraineeConverter;
 import org.example.crmsystem.dto.trainee.TraineeServiceDTO;
@@ -108,7 +108,7 @@ public class TraineeController {
     })
     public ResponseEntity<List<TrainerNestedDTO>> updateTraineeTrainers(
             @PathVariable("username") String username,
-            @NotBlank @RequestBody List<String> trainerUsernames) throws EntityNotFoundException {
+            @NotNull @RequestBody List<String> trainerUsernames) throws EntityNotFoundException {
         List<TrainerNestedDTO> updatedTrainers = traineeService.updateTraineeTrainers(username, trainerUsernames);
         return new ResponseEntity<>(updatedTrainers, HttpStatus.OK);
     }

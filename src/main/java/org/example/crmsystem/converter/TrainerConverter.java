@@ -60,7 +60,6 @@ public class TrainerConverter extends UserConverter {
                 .isActive(trainer.isActive())
                 .specialization(trainer.getSpecialization())
                 .password(trainer.getPassword())
-                /// /
                 .build();
     }
 
@@ -71,15 +70,6 @@ public class TrainerConverter extends UserConverter {
                 .isActive(trainer.isActive())
                 .specialization(trainer.getSpecialization())
                 .trainees(trainer.getTrainees().stream().map(TraineeConverter::toNestedDTO).collect(Collectors.toList()))
-                .build();
-    }
-
-    public static TrainerNestedDTO toNestedDTO(TrainerServiceDTO trainer) {
-        return TrainerNestedDTO.builder()
-                .username(trainer.getUserName())
-                .firstName(trainer.getFirstName())
-                .lastName(trainer.getLastName())
-                .specialization(trainer.getSpecialization())
                 .build();
     }
 
@@ -124,7 +114,6 @@ public class TrainerConverter extends UserConverter {
                 .specialization(trainer.getSpecialization())
                 .build();
     }
-
 
     public static TrainerUpdateResponseDTO toUpdateResponseDTO(TrainerServiceDTO trainer) {
         return TrainerUpdateResponseDTO.builder()

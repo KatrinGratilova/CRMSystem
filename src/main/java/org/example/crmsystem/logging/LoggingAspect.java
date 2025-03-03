@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.Objects;
+
 @Aspect
 @Component
 @Log4j2
@@ -22,7 +24,7 @@ public class LoggingAspect {
             "@annotation(org.springframework.web.bind.annotation.PatchMapping)")
     public Object logRestCall(ProceedingJoinPoint joinPoint) throws Throwable {
         long startTime = System.currentTimeMillis();
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        HttpServletRequest request = ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
 
         String httpMethod = request.getMethod();
         String requestURI = request.getRequestURI();

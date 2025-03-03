@@ -48,7 +48,7 @@ public class TrainerController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved trainer"),
             @ApiResponse(responseCode = "401", description = "Unauthorized access"),
-            @ApiResponse(responseCode = "404", description = "Trainee not found"),
+            @ApiResponse(responseCode = "404", description = "Trainer not found"),
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
     public ResponseEntity<TrainerGetResponseDTO> getTrainer(@PathVariable String username) throws EntityNotFoundException {
@@ -63,7 +63,7 @@ public class TrainerController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully updated trainer"),
             @ApiResponse(responseCode = "401", description = "Unauthorized access"),
-            @ApiResponse(responseCode = "404", description = "Trainee not found"),
+            @ApiResponse(responseCode = "404", description = "Trainer not found"),
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
     public ResponseEntity<TrainerUpdateResponseDTO> updateTrainer(@Valid @RequestBody TrainerUpdateRequestDTO trainer) throws EntityNotFoundException {
@@ -72,6 +72,13 @@ public class TrainerController {
     }
 
     @PatchMapping("/{username}/status")
+    @Operation(summary = "Update trainer active status by username", description = "Updates trainer status")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully updated trainer status"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access"),
+            @ApiResponse(responseCode = "404", description = "Trainer not found"),
+            @ApiResponse(responseCode = "500", description = "Application failed to process the request")
+    })
     public ResponseEntity<HttpStatus> toggleActiveStatus(@PathVariable String username, @Valid @RequestBody UserUpdateStatusRequestDTO request) throws EntityNotFoundException {
         trainerService.toggleActiveStatus(username, request);
         return new ResponseEntity<>(HttpStatus.OK);
@@ -82,7 +89,7 @@ public class TrainerController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved trainer trainings by criteria"),
             @ApiResponse(responseCode = "401", description = "Unauthorized access"),
-            @ApiResponse(responseCode = "404", description = "Trainee not found"),
+            @ApiResponse(responseCode = "404", description = "Trainer not found"),
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
     public ResponseEntity<List<TrainingByTrainerDTO>> getTrainerTrainings(

@@ -1,6 +1,8 @@
 package org.example.crmsystem.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.common.lang.NonNullApi;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.crmsystem.messages.ExceptionMessages;
 import org.example.crmsystem.service.AuthenticationService;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -18,6 +21,7 @@ import java.util.regex.Pattern;
 
 @Component
 @RequiredArgsConstructor
+@NonNullApi
 public class AuthenticationFilter extends OncePerRequestFilter {
     private final AuthenticationService authenticationService;
 
@@ -27,28 +31,40 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         CachedBodyHttpServletRequest wrappedRequest = new CachedBodyHttpServletRequest(request);
 
         String path = wrappedRequest.getRequestURI();
-        if (path.equals("/login") || request.getMethod().equalsIgnoreCase("POST") || path.equals("/swagger-ui.html")) {
+        if (path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs") || path.equals("/")) {
+            filterChain.doFilter(wrappedRequest, response);
+            return;
+        }
+        if (path.equals("/login") || request.getMethod().equalsIgnoreCase("POST")) {
             filterChain.doFilter(wrappedRequest, response);
             return;
         }
 
         String username = extractUsername(wrappedRequest);
+        try {
+            if (username == null || !authenticationService.isAuthenticated(username)) {
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
-        if (username == null || !authenticationService.isAuthenticated(username)) {
+                String errorMessage = ExceptionMessages.USER_IS_NOT_AUTHENTICATED_WITH_USERNAME.format(username);
+
+                response.getWriter().write(errorMessage);
+                response.getWriter().flush();
+                return;
+            }
+        } catch (EntityNotFoundException e) {
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-
-            String errorMessage = ExceptionMessages.USER_IS_NOT_AUTHENTICATED_WITH_USERNAME.format(username);
-
-            response.getWriter().write(errorMessage);
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            response.getWriter().write(e.getMessage());
             response.getWriter().flush();
             return;
         }
-
         filterChain.doFilter(wrappedRequest, response);
     }
 
+    @Nullable
     private String extractUsername(HttpServletRequest request) {
         String path = request.getRequestURI();
         String username = null;
@@ -74,7 +90,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         } catch (IOException e) {
             System.out.println("Failed to parse request body: " + e.getMessage());
         }
-
-        return null;
+        return username;
     }
 }

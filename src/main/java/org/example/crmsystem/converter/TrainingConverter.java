@@ -29,7 +29,7 @@ public class TrainingConverter {
                 .build();
     }
 
-    public static TrainingServiceDTO toServiceDTO(TrainingEntity training){
+    public static TrainingServiceDTO toServiceDTO(TrainingEntity training) {
         return TrainingServiceDTO.builder()
                 .id(training.getId())
                 .trainee(TraineeConverter.toWithoutListDTO(training.getTrainee()))
@@ -41,7 +41,7 @@ public class TrainingConverter {
                 .build();
     }
 
-    public static TrainingWithoutUsersServiceDTO toWithoutUsersDTO(TrainingEntity training){
+    public static TrainingWithoutUsersServiceDTO toWithoutUsersDTO(TrainingEntity training) {
         return TrainingWithoutUsersServiceDTO
                 .builder()
                 .id(training.getId())
@@ -54,7 +54,7 @@ public class TrainingConverter {
                 .build();
     }
 
-    public static TrainingByTraineeDTO toByTraineeDTO(TrainingEntity training){
+    public static TrainingByTraineeDTO toByTraineeDTO(TrainingEntity training) {
         return TrainingByTraineeDTO.builder()
                 .trainerUsername(training.getTrainer().getUserName())
                 .trainingType(training.getTrainingType())
@@ -64,7 +64,7 @@ public class TrainingConverter {
                 .build();
     }
 
-    public static TrainingByTrainerDTO toByTrainerDTO(TrainingEntity training){
+    public static TrainingByTrainerDTO toByTrainerDTO(TrainingEntity training) {
         return TrainingByTrainerDTO.builder()
                 .traineeUsername(training.getTrainee().getUserName())
                 .trainingName(training.getTrainingName())
@@ -74,7 +74,7 @@ public class TrainingConverter {
                 .build();
     }
 
-    public static TrainingEntity toEntity(TrainingServiceDTO training){
+    public static TrainingEntity toEntity(TrainingServiceDTO training) {
         return TrainingEntity.builder()
                 .id(training.getId())
                 .trainee(TraineeConverter.toEntity(training.getTrainee()))
@@ -86,7 +86,7 @@ public class TrainingConverter {
                 .build();
     }
 
-    public static TrainingEntity toEntity(TrainingWithoutUsersServiceDTO training){
+    public static TrainingEntity toEntity(TrainingWithoutUsersServiceDTO training) {
         return TrainingEntity.builder()
                 .id(training.getId())
                 .trainingType(training.getTrainingType())

@@ -8,7 +8,6 @@ import org.springframework.util.StreamUtils;
 import java.io.*;
 
 public class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
-
     private final byte[] cachedBody;
 
     public CachedBodyHttpServletRequest(HttpServletRequest request) throws IOException {

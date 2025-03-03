@@ -134,7 +134,7 @@ public class TraineeRepositoryImpl implements TraineeDAO {
     }
 
     @Override
-    public TraineeEntity updatePassword(TraineeEntity traineeEntity) throws EntityNotFoundException {
+    public void updatePassword(TraineeEntity traineeEntity) throws EntityNotFoundException {
         String transactionId = ThreadContext.get("transactionId");
         Transaction transaction = null;
 
@@ -154,7 +154,6 @@ public class TraineeRepositoryImpl implements TraineeDAO {
             log.error(LogMessages.ERROR_OCCURRED.getMessage(), transactionId, e.getMessage());
             if (transaction != null) transaction.rollback();
         }
-        return traineeEntity;
     }
 
     @Override

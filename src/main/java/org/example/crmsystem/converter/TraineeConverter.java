@@ -53,6 +53,7 @@ public class TraineeConverter extends UserConverter {
                 .trainings(trainee.getTrainings().stream().map(TrainingConverter::toEntity).collect(Collectors.toList()))
                 .build();
     }
+
     public static TraineeEntity toEntity(TraineeWithoutListsServiceDTO trainee) {
         return TraineeEntity.builder()
                 .id(trainee.getId())
@@ -74,14 +75,6 @@ public class TraineeConverter extends UserConverter {
                 .dateOfBirth(trainee.getDateOfBirth())
                 .address(trainee.getAddress())
                 .trainers(trainee.getTrainers().stream().map(TrainerConverter::toNestedDTO).collect(Collectors.toList()))
-                .build();
-    }
-
-    public static TraineeNestedDTO toNestedDTO(TraineeServiceDTO trainee) {
-        return TraineeNestedDTO.builder()
-                .username(trainee.getUserName())
-                .firstName(trainee.getFirstName())
-                .lastName(trainee.getLastName())
                 .build();
     }
 

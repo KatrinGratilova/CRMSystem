@@ -25,7 +25,7 @@ public class TrainingTypeService {
         return trainingTypeRepository.getById(id);
     }
 
-    public List<TrainingTypeEntity> getAll(){
+    public List<TrainingTypeEntity> getAll() {
         return trainingTypeRepository.getAll();
     }
 }

@@ -11,6 +11,4 @@ public interface TrainingDAO {
     Optional<TrainingEntity> getById(long id);
 
     List<TrainingEntity> getByName(String name);
-
-//    TrainingEntity update(TrainingEntity trainingEntity) throws EntityNotFoundException;
 }

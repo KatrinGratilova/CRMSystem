@@ -103,7 +103,7 @@ public class TrainerRepositoryImpl implements TrainerDAO {
     }
 
     @Override
-    public TrainerEntity updatePassword(TrainerEntity trainerEntity) throws EntityNotFoundException {
+    public void updatePassword(TrainerEntity trainerEntity) throws EntityNotFoundException {
         String transactionId = ThreadContext.get("transactionId");
         Transaction transaction = null;
 
@@ -123,7 +123,6 @@ public class TrainerRepositoryImpl implements TrainerDAO {
             log.error(LogMessages.ERROR_OCCURRED.getMessage(), transactionId, e.getMessage());
             if (transaction != null) transaction.rollback();
         }
-        return trainerEntity;
     }
 
     @Override
