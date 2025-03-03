@@ -2,7 +2,7 @@ package org.example.crmsystem.dao.interfaces;
 
 import org.example.crmsystem.entity.TrainerEntity;
 import org.example.crmsystem.entity.TrainingEntity;
-import org.example.crmsystem.exception.EntityNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.List;
