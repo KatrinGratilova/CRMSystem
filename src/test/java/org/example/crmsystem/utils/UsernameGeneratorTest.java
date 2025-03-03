@@ -1,10 +1,11 @@
 package org.example.crmsystem.utils;
 
+import org.example.crmsystem.converter.TraineeConverter;
+import org.example.crmsystem.converter.TrainerConverter;
 import org.example.crmsystem.dao.interfaces.TraineeDAO;
 import org.example.crmsystem.dao.interfaces.TrainerDAO;
 import org.example.crmsystem.entity.TraineeEntity;
 import org.example.crmsystem.entity.TrainerEntity;
-import org.example.crmsystem.entity.UserEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,14 +39,14 @@ class UsernameGeneratorTest {
 
     @Test
     void generateUserName_ShouldReturnBaseName_WhenNoDuplicatesExist() {
-        UserEntity user = new UserEntity();
+        TrainerEntity user = new TrainerEntity();
         user.setFirstName("John");
         user.setLastName("Doe");
 
         when(traineeDAO.getWhereUserNameStartsWith("John.Doe")).thenReturn(Collections.emptyList());
         when(trainerDAO.getWhereUserNameStartsWith("John.Doe")).thenReturn(Collections.emptyList());
 
-        String generatedUsername = usernameGenerator.generateUserName(user);
+        String generatedUsername = usernameGenerator.generateUserName(TrainerConverter.toServiceDTO(user));
 
         assertEquals("John.Doe", generatedUsername);
         verify(traineeDAO).getWhereUserNameStartsWith("John.Doe");
@@ -54,7 +55,7 @@ class UsernameGeneratorTest {
 
     @Test
     void generateUserName_ShouldAppendNumber_WhenDuplicatesExist() {
-        UserEntity user = new UserEntity();
+        TraineeEntity user = new TraineeEntity();
         user.setFirstName("Jane");
         user.setLastName("Smith");
 
@@ -67,7 +68,7 @@ class UsernameGeneratorTest {
                 .userName("Jane.Smith1")
                 .build()));
 
-        String generatedUsername = usernameGenerator.generateUserName(user);
+        String generatedUsername = usernameGenerator.generateUserName(TraineeConverter.toServiceDTO(user));
 
         assertEquals("Jane.Smith2", generatedUsername);
         verify(traineeDAO).getWhereUserNameStartsWith("Jane.Smith");
