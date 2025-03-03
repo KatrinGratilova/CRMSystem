@@ -10,8 +10,11 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.*;
 
 public class TrainingTypeServiceTest {
     @Mock
@@ -36,15 +39,24 @@ public class TrainingTypeServiceTest {
     public void testGetById() {
         int id = 1;
         TrainingTypeEntity mockEntity = new TrainingTypeEntity(1, TrainingType.YOGA);
-
-        Mockito.when(trainingTypeRepository.getById(id)).thenReturn(mockEntity);
+        when(trainingTypeRepository.getById(id)).thenReturn(mockEntity);
 
         TrainingTypeEntity result = trainingTypeService.getById(id);
 
-        assert result != null;
-        assert result.getId() == id;
-        assert result.getTrainingType() == TrainingType.YOGA;
+        assertNotNull(result);
+        assertEquals(id, result.getId());
+        assertEquals(TrainingType.YOGA, result.getTrainingType());
 
         verify(trainingTypeRepository).getById(id);
+    }
+
+    @Test
+    public void testGetAll(){
+        when(trainingTypeRepository.getAll()).thenReturn(List.of(new TrainingTypeEntity(1, TrainingType.YOGA)));
+
+        List<TrainingTypeEntity> result = trainingTypeService.getAll();
+        assertEquals(1, result.size());
+        assertEquals(TrainingType.YOGA, result.get(0).getTrainingType());
+        verify(trainingTypeRepository, times(1)).getAll();
     }
 }

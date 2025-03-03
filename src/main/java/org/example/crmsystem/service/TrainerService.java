@@ -1,176 +1,105 @@
 package org.example.crmsystem.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.logging.log4j.ThreadContext;
+import org.example.crmsystem.converter.TrainerConverter;
+import org.example.crmsystem.converter.TrainingConverter;
 import org.example.crmsystem.dao.interfaces.TrainerDAO;
+import org.example.crmsystem.dto.trainer.TrainerServiceDTO;
+import org.example.crmsystem.dto.training.TrainingByTrainerDTO;
+import org.example.crmsystem.dto.user.UserUpdateStatusRequestDTO;
 import org.example.crmsystem.entity.TrainerEntity;
 import org.example.crmsystem.entity.TrainingEntity;
-import org.example.crmsystem.exception.EntityNotFoundException;
-import org.example.crmsystem.exception.UserIsNotAuthenticated;
+import jakarta.persistence.EntityNotFoundException;
 import org.example.crmsystem.messages.ExceptionMessages;
 import org.example.crmsystem.messages.LogMessages;
 import org.example.crmsystem.utils.PasswordGenerator;
 import org.example.crmsystem.utils.UsernameGenerator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Log4j2
+@RequiredArgsConstructor
 public class TrainerService {
     private final TrainerDAO trainerRepository;
     private final PasswordGenerator passwordGenerator;
     private final UsernameGenerator usernameGenerator;
     private final AuthenticationService authenticationService;
 
-    @Autowired
-    public TrainerService(TrainerDAO trainerRepository, PasswordGenerator passwordGenerator, UsernameGenerator usernameGenerator, AuthenticationService authenticationService) {
-        this.trainerRepository = trainerRepository;
-        this.passwordGenerator = passwordGenerator;
-        this.usernameGenerator = usernameGenerator;
-        this.authenticationService = authenticationService;
+    public TrainerServiceDTO createProfile(TrainerServiceDTO trainerDTO) {
+        String transactionId = ThreadContext.get("transactionId");
+        log.debug(LogMessages.ADDED_NEW_TRAINER.getMessage(), transactionId, trainerDTO.getFirstName());
+
+        trainerDTO.setUsername(usernameGenerator.generateUsername(trainerDTO));
+        trainerDTO.setPassword(passwordGenerator.generateUserPassword());
+
+        TrainerEntity addedTrainerEntity = trainerRepository.add(TrainerConverter.toEntity(trainerDTO));
+        authenticationService.authenticate(trainerDTO.getUsername(), trainerDTO.getPassword());
+
+        log.info(LogMessages.ADDED_NEW_TRAINER.getMessage(), transactionId, addedTrainerEntity.getUsername());
+        return TrainerConverter.toServiceDTO(addedTrainerEntity);
     }
 
-    public TrainerEntity createProfile(TrainerEntity trainerEntity) {
-        log.debug(LogMessages.ADDED_NEW_TRAINER.getMessage(), trainerEntity.getFirstName());
+    public TrainerServiceDTO getByUsername(String username) throws EntityNotFoundException {
+        String transactionId = ThreadContext.get("transactionId");
+        log.debug(LogMessages.RETRIEVING_TRAINER.getMessage(), transactionId, username);
 
-        trainerEntity.setUserName(usernameGenerator.generateUserName(trainerEntity));
-        trainerEntity.setPassword(passwordGenerator.generateUserPassword());
-
-        TrainerEntity addedTrainerEntity = trainerRepository.add(trainerEntity);
-        authenticationService.authenticate(trainerEntity.getUserName(), trainerEntity.getPassword());
-
-        log.info(LogMessages.ADDED_NEW_TRAINER.getMessage(), addedTrainerEntity.getId());
-        return addedTrainerEntity;
-    }
-
-    public TrainerEntity getById(long id) throws EntityNotFoundException, UserIsNotAuthenticated {
-        log.debug(LogMessages.RETRIEVING_TRAINER.getMessage(), id);
-
-        if (authenticationService.isAuthenticated(id)) {
-            Optional<TrainerEntity> trainer = trainerRepository.getById(id);
-
-            if (trainer.isEmpty()) {
-                log.error(LogMessages.TRAINER_NOT_FOUND.getMessage(), id);
-                throw new EntityNotFoundException(ExceptionMessages.TRAINER_NOT_FOUND.format(id));
-            } else {
-                log.info(LogMessages.TRAINER_FOUND.getMessage(), id);
-                return trainer.get();
-            }
+        Optional<TrainerEntity> trainer = trainerRepository.getByUsername(username);
+        if (trainer.isEmpty()) {
+            log.warn(LogMessages.TRAINER_NOT_FOUND.getMessage(), transactionId, username);
+            throw new jakarta.persistence.EntityNotFoundException(ExceptionMessages.TRAINER_NOT_FOUND.format(username));
+        } else {
+            log.info(LogMessages.TRAINER_FOUND.getMessage(), transactionId, trainer.get().getUsername());
+            return TrainerConverter.toServiceDTO(trainer.get());
         }
-        throw new UserIsNotAuthenticated(ExceptionMessages.USER_IS_NOT_AUTHENTICATED.format(id));
     }
 
-    public TrainerEntity getByUsername(String username) throws EntityNotFoundException, UserIsNotAuthenticated {
-        log.debug(LogMessages.RETRIEVING_TRAINER_BY_USERNAME.getMessage(), username);
+    public TrainerServiceDTO update(TrainerServiceDTO trainerDTO) throws EntityNotFoundException {
+        String transactionId = ThreadContext.get("transactionId");
+        log.debug(LogMessages.ATTEMPTING_TO_UPDATE_TRAINER.getMessage(), transactionId, trainerDTO.getUsername());
 
-        if (authenticationService.isAuthenticated(username)) {
-            Optional<TrainerEntity> trainer = trainerRepository.getByUserName(username);
-
-            if (trainer.isEmpty()) {
-                log.error(LogMessages.TRAINER_NOT_FOUND_BY_USERNAME.getMessage(), username);
-                throw new EntityNotFoundException(ExceptionMessages.TRAINER_NOT_FOUND_BY_USERNAME.format(username));
-            } else {
-                log.info(LogMessages.TRAINER_FOUND.getMessage(), trainer.get().getId());
-                return trainer.get();
-            }
+        TrainerEntity updatedTrainerEntity = TrainerConverter.toEntity(trainerDTO);
+        try {
+            updatedTrainerEntity = trainerRepository.update(updatedTrainerEntity);
+        } catch (EntityNotFoundException e) {
+            log.warn(LogMessages.TRAINER_NOT_FOUND.getMessage(), transactionId, updatedTrainerEntity.getUsername());
+            throw e;
         }
-        throw new UserIsNotAuthenticated(ExceptionMessages.USER_IS_NOT_AUTHENTICATED_WITH_USERNAME.format(username));
+        log.info(LogMessages.UPDATED_TRAINER.getMessage(), transactionId, updatedTrainerEntity.getUsername());
+        return TrainerConverter.toServiceDTO(updatedTrainerEntity);
     }
 
-    public TrainerEntity update(TrainerEntity trainerEntity) throws EntityNotFoundException, UserIsNotAuthenticated {
-        log.debug(LogMessages.ATTEMPTING_TO_UPDATE_TRAINER.getMessage(), trainerEntity.getId());
+    public boolean toggleActiveStatus(String username, UserUpdateStatusRequestDTO trainerStatus) throws EntityNotFoundException {
+        String transactionId = ThreadContext.get("transactionId");
+        log.debug(LogMessages.ATTEMPTING_TO_CHANGE_TRAINERS_STATUS.getMessage(), transactionId, username);
 
-        if (authenticationService.isAuthenticated(trainerEntity.getId())) {
-            TrainerEntity updatedTrainerEntity = trainerEntity;
-            try {
-                if (validateTrainer(trainerEntity))
-                    updatedTrainerEntity = trainerRepository.update(trainerEntity);
-            } catch (EntityNotFoundException e) {
-                log.warn(LogMessages.TRAINER_NOT_FOUND.getMessage(), trainerEntity.getId());
-                throw e;
-            }
-
-            log.info(LogMessages.UPDATED_TRAINER.getMessage(), updatedTrainerEntity.getId());
-            return updatedTrainerEntity;
+        boolean result;
+        try {
+            result = trainerRepository.toggleActiveStatus(username, trainerStatus.getIsActive());
+        } catch (EntityNotFoundException e) {
+            log.warn(LogMessages.TRAINER_NOT_FOUND.getMessage(), transactionId, username);
+            throw e;
         }
-        throw new UserIsNotAuthenticated(ExceptionMessages.USER_IS_NOT_AUTHENTICATED.format(trainerEntity.getId()));
-
+        log.info(LogMessages.TRAINERS_STATUS_CHANGED.getMessage(), transactionId, username, result);
+        return result;
     }
 
-    public boolean toggleActiveStatus(TrainerEntity trainerEntity) throws UserIsNotAuthenticated, EntityNotFoundException {
-        long id = trainerEntity.getId();
-        log.debug(LogMessages.ATTEMPTING_TO_CHANGE_TRAINERS_STATUS.getMessage(), id);
+    public List<TrainingByTrainerDTO> getTrainerTrainingsByCriteria(
+            String trainerUsername, LocalDateTime fromDate, LocalDateTime toDate, String traineeName) {
+        String transactionId = ThreadContext.get("transactionId");
+        log.debug(LogMessages.FETCHING_TRAININGS_FOR_TRAINER_BY_CRITERIA.getMessage(), transactionId,
+                trainerUsername, fromDate, toDate, traineeName);
 
-        if (authenticationService.isAuthenticated(id)) {
-            boolean result;
-            try {
-                result = trainerRepository.toggleActiveStatus(trainerEntity);
-            } catch (EntityNotFoundException e) {
-                log.warn(LogMessages.TRAINER_NOT_FOUND.getMessage(), trainerEntity.getId());
-                throw e;
-            }
+        List<TrainingEntity> trainings = trainerRepository.getTrainerTrainingsByCriteria(
+                trainerUsername, fromDate, toDate, traineeName);
 
-            log.info(LogMessages.TRAINERS_STATUS_CHANGED.getMessage(), id, result);
-            return result;
-        }
-        throw new UserIsNotAuthenticated(ExceptionMessages.USER_IS_NOT_AUTHENTICATED.format(id));
-    }
-
-    public List<TrainerEntity> getTrainersNotAssignedToTrainee(String traineeUserName) throws UserIsNotAuthenticated {
-        log.info(LogMessages.FETCHING_TRAINERS_NOT_ASSIGNED_TO_TRAINEE.getMessage(), traineeUserName);
-
-        if (authenticationService.isAuthenticated(traineeUserName)) {
-            List<TrainerEntity> trainers = trainerRepository.getTrainersNotAssignedToTrainee(traineeUserName);
-            log.info(LogMessages.FOUND_TRAINERS_NOT_ASSIGNED_TO_TRAINEE.getMessage(), trainers.size(), traineeUserName);
-
-            return trainers;
-        }
-        throw new UserIsNotAuthenticated(ExceptionMessages.USER_IS_NOT_AUTHENTICATED_WITH_USERNAME.format(traineeUserName));
-    }
-
-    public boolean changePassword(String userName, String oldPassword, String newPassword) throws EntityNotFoundException, UserIsNotAuthenticated {
-        TrainerEntity trainerEntity = trainerRepository.getByUserName(userName)
-                .orElseThrow(() -> new EntityNotFoundException(ExceptionMessages.TRAINER_WITH_USERNAME_IS_NOT_FOUND.format(userName)));
-
-        long id = trainerEntity.getId();
-        log.debug(LogMessages.ATTEMPTING_TO_CHANGE_TRAINERS_PASSWORD.getMessage(), id);
-
-        if (authenticationService.isAuthenticated(trainerEntity.getId())) {
-            if (trainerEntity.getPassword().equals(oldPassword)) {
-                trainerEntity.setPassword(newPassword);
-
-                if (validateTrainer(trainerEntity)) {
-                    trainerRepository.update(trainerEntity);
-                    log.info(LogMessages.TRAINERS_PASSWORD_CHANGED.getMessage(), trainerEntity.getId());
-                    return true;
-                }
-                return false;
-            }
-            log.warn(LogMessages.TRAINERS_PASSWORD_NOT_CHANGED);
-            return false;
-        }
-        throw new UserIsNotAuthenticated(ExceptionMessages.USER_IS_NOT_AUTHENTICATED.format(id));
-    }
-
-    public List<TrainingEntity> getTrainerTrainingsByCriteria(
-            String trainerUserName, LocalDateTime fromDate, LocalDateTime toDate, String traineeName) throws UserIsNotAuthenticated {
-        log.debug(LogMessages.FETCHING_TRAININGS_FOR_TRAINER_BY_CRITERIA.getMessage(),
-                trainerUserName, fromDate, toDate, traineeName);
-
-        if (authenticationService.isAuthenticated(trainerUserName)) {
-            List<TrainingEntity> trainings = trainerRepository.getTrainerTrainingsByCriteria(
-                    trainerUserName, fromDate, toDate, traineeName);
-
-            log.info(LogMessages.FOUND_TRAININGS_FOR_TRAINER.getMessage(), trainings.size(), trainerUserName);
-            return trainings;
-        }
-        throw new UserIsNotAuthenticated(ExceptionMessages.USER_IS_NOT_AUTHENTICATED_WITH_USERNAME.format(trainerUserName));
-    }
-
-    private boolean validateTrainer(TrainerEntity trainerEntity){
-        return trainerEntity.getId() != 0 && trainerEntity.getFirstName() != null && trainerEntity.getLastName() != null && trainerEntity.getUserName() != null && trainerEntity.getPassword() != null && trainerEntity.getSpecialization() != null;
+        log.info(LogMessages.FOUND_TRAININGS_FOR_TRAINER.getMessage(), transactionId, trainings.size(), trainerUsername);
+        return trainings.stream().map(TrainingConverter::toByTrainerDTO).collect(Collectors.toList());
     }
 }

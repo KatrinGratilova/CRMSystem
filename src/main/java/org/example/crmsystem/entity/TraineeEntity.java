@@ -28,13 +28,7 @@ public class TraineeEntity extends UserEntity {
     @OneToMany(mappedBy = "trainee", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TrainingEntity> trainings = new ArrayList<>();
 
-    @ManyToMany(cascade = {
-            CascadeType.PERSIST,
-            CascadeType.MERGE
-    }, fetch = FetchType.EAGER)
-    @JoinTable(name = "trainees_trainers",
-            joinColumns = @JoinColumn(name = "trainee_id"),
-            inverseJoinColumns = @JoinColumn(name = "trainer_id"))
+    @ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
     private List<TrainerEntity> trainers = new ArrayList<>();
 
     public TraineeEntity(long userId, String firstName, String lastName, String userName, String password, boolean isActive, LocalDate dateOfBirth, String address) {
@@ -66,9 +60,5 @@ public class TraineeEntity extends UserEntity {
     protected void onCreate() {
         if (trainers.isEmpty()) trainers = new ArrayList<>();
         if (trainings.isEmpty()) trainings = new ArrayList<>();
-    }
-
-    public void addTrainer(TrainerEntity trainer) {
-        trainers.add(trainer);
     }
 }

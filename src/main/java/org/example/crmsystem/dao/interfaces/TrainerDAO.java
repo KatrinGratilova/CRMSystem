@@ -2,7 +2,7 @@ package org.example.crmsystem.dao.interfaces;
 
 import org.example.crmsystem.entity.TrainerEntity;
 import org.example.crmsystem.entity.TrainingEntity;
-import org.example.crmsystem.exception.EntityNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,9 +15,9 @@ public interface TrainerDAO extends HavingUserName<TrainerEntity> {
 
     TrainerEntity update(TrainerEntity trainerEntity) throws EntityNotFoundException;
 
-    boolean toggleActiveStatus(TrainerEntity trainerEntity) throws EntityNotFoundException;
+    void updatePassword(TrainerEntity trainerEntity) throws EntityNotFoundException;
 
-    List<TrainerEntity> getTrainersNotAssignedToTrainee(String traineeUserName);
+    boolean toggleActiveStatus(String username, boolean isActive) throws EntityNotFoundException;
 
     List<TrainingEntity> getTrainerTrainingsByCriteria(
             String trainerUserName, LocalDateTime fromDate, LocalDateTime toDate, String traineeName);

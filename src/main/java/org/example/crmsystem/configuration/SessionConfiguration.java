@@ -1,13 +1,10 @@
 package org.example.crmsystem.configuration;
 
-import org.apache.logging.log4j.plugins.Singleton;
 import org.example.crmsystem.entity.*;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.*;
 
 @Configuration
 @ComponentScan(basePackages = "org.example.crmsystem")
@@ -35,7 +32,7 @@ public class SessionConfiguration {
     private String ddlAuto;
 
     @Bean
-    @Singleton
+    @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
     public SessionFactory sessionFactory() {
         org.hibernate.cfg.Configuration configuration = new org.hibernate.cfg.Configuration();
 

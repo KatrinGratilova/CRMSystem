@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface HavingUserName<T> {
-    Optional<T> getByUserName(String userName);
+    Optional<T> getByUsername(String userName);
 
-    List<T> getWhereUserNameStartsWith(String userName);
+    List<T> getWhereUsernameStartsWith(String userName);
 }
