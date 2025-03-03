@@ -2,6 +2,7 @@ package org.example.crmsystem.converter;
 
 import org.example.crmsystem.dto.trainer.TrainerNestedDTO;
 import org.example.crmsystem.dto.trainer.TrainerServiceDTO;
+import org.example.crmsystem.dto.trainer.TrainerWithoutListsServiceDTO;
 import org.example.crmsystem.dto.trainer.request.TrainerRegistrationRequestDTO;
 import org.example.crmsystem.dto.trainer.request.TrainerUpdateRequestDTO;
 import org.example.crmsystem.dto.trainer.response.TrainerGetResponseDTO;
@@ -31,10 +32,8 @@ public class TrainerConverter extends UserConverter {
                 .lastName(trainer.getLastName())
                 .isActive(trainer.isActive())
                 .specialization(trainer.getSpecialization())
-                .trainees(new ArrayList<>())
-                .trainings(new ArrayList<>())
-                //.trainees(trainer.getTrainees().stream().map(TraineeConverter::toServiceDTO).collect(Collectors.toList()))
-                //.trainings(trainer.getTrainings().stream().map(TrainingConverter::toServiceDTO).collect(Collectors.toList()))
+                .trainees(trainer.getTrainees().stream().map(TraineeConverter::toWithoutListDTO).collect(Collectors.toList()))
+                .trainings(trainer.getTrainings().stream().map(TrainingConverter::toWithoutUsersDTO).collect(Collectors.toList()))
                 .build();
     }
 
@@ -49,6 +48,19 @@ public class TrainerConverter extends UserConverter {
                 .password(trainer.getPassword())
                 .trainees(trainer.getTrainees().stream().map(TraineeConverter::toEntity).collect(Collectors.toList()))
                 .trainings(trainer.getTrainings().stream().map(TrainingConverter::toEntity).collect(Collectors.toList()))
+                .build();
+    }
+
+    public static TrainerEntity toEntity(TrainerWithoutListsServiceDTO trainer) {
+        return TrainerEntity.builder()
+                .id(trainer.getId())
+                .firstName(trainer.getFirstName())
+                .lastName(trainer.getLastName())
+                .userName(trainer.getUserName())
+                .isActive(trainer.isActive())
+                .specialization(trainer.getSpecialization())
+                .password(trainer.getPassword())
+                /// /
                 .build();
     }
 
@@ -71,6 +83,49 @@ public class TrainerConverter extends UserConverter {
                 .build();
     }
 
+    public static TrainerNestedDTO toNestedDTO(TrainerWithoutListsServiceDTO trainer) {
+        return TrainerNestedDTO.builder()
+                .username(trainer.getUserName())
+                .firstName(trainer.getFirstName())
+                .lastName(trainer.getLastName())
+                .specialization(trainer.getSpecialization())
+                .build();
+    }
+
+    public static TrainerNestedDTO toNestedDTO(TrainerEntity trainer) {
+        return TrainerNestedDTO.builder()
+                .username(trainer.getUserName())
+                .firstName(trainer.getFirstName())
+                .lastName(trainer.getLastName())
+                .specialization(trainer.getSpecialization())
+                .build();
+    }
+
+    public static TrainerWithoutListsServiceDTO toWithoutListDTO(TrainerEntity trainer) {
+        return TrainerWithoutListsServiceDTO.builder()
+                .id(trainer.getId())
+                .userName(trainer.getUserName())
+                .firstName(trainer.getFirstName())
+                .lastName(trainer.getLastName())
+                .password(trainer.getPassword())
+                .isActive(trainer.isActive())
+                .specialization(trainer.getSpecialization())
+                .build();
+    }
+
+    public static TrainerWithoutListsServiceDTO toWithoutListDTO(TrainerServiceDTO trainer) {
+        return TrainerWithoutListsServiceDTO.builder()
+                .id(trainer.getId())
+                .userName(trainer.getUserName())
+                .firstName(trainer.getFirstName())
+                .lastName(trainer.getLastName())
+                .password(trainer.getPassword())
+                .isActive(trainer.isActive())
+                .specialization(trainer.getSpecialization())
+                .build();
+    }
+
+
     public static TrainerUpdateResponseDTO toUpdateResponseDTO(TrainerServiceDTO trainer) {
         return TrainerUpdateResponseDTO.builder()
                 .username(trainer.getUserName())
@@ -78,7 +133,7 @@ public class TrainerConverter extends UserConverter {
                 .lastName(trainer.getLastName())
                 .isActive(trainer.isActive())
                 .specialization(trainer.getSpecialization())
-                .trainees(trainer.getTrainees().stream().map(TraineeConverter::toGetResponseDTO).collect(Collectors.toList()))
+                .trainees(trainer.getTrainees().stream().map(TraineeConverter::toNestedDTO).collect(Collectors.toList()))
                 .build();
     }
 
@@ -87,7 +142,7 @@ public class TrainerConverter extends UserConverter {
                 .userName(trainer.getUsername())
                 .firstName(trainer.getFirstName())
                 .lastName(trainer.getLastName())
-                .isActive(trainer.isActive())
+                .isActive(trainer.getIsActive())
                 .specialization(trainer.getSpecialization())
                 .trainees(new ArrayList<>())
                 .trainings(new ArrayList<>())

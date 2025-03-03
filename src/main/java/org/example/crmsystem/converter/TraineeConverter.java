@@ -2,6 +2,7 @@ package org.example.crmsystem.converter;
 
 import org.example.crmsystem.dto.trainee.TraineeNestedDTO;
 import org.example.crmsystem.dto.trainee.TraineeServiceDTO;
+import org.example.crmsystem.dto.trainee.TraineeWithoutListsServiceDTO;
 import org.example.crmsystem.dto.trainee.request.TraineeRegistrationRequestDTO;
 import org.example.crmsystem.dto.trainee.request.TraineeUpdateRequestDTO;
 import org.example.crmsystem.dto.trainee.response.TraineeGetResponseDTO;
@@ -33,8 +34,8 @@ public class TraineeConverter extends UserConverter {
                 .isActive(trainee.isActive())
                 .dateOfBirth(trainee.getDateOfBirth())
                 .address(trainee.getAddress())
-                .trainers(trainee.getTrainers().stream().map(TrainerConverter::toServiceDTO).collect(Collectors.toList()))
-                //.trainings(trainee.getTrainings().stream().map(TrainingConverter::toServiceDTO).collect(Collectors.toList()))
+                .trainers(trainee.getTrainers().stream().map(TrainerConverter::toWithoutListDTO).collect(Collectors.toList()))
+                .trainings(trainee.getTrainings().stream().map(TrainingConverter::toWithoutUsersDTO).collect(Collectors.toList()))
                 .build();
     }
 
@@ -49,8 +50,19 @@ public class TraineeConverter extends UserConverter {
                 .dateOfBirth(trainee.getDateOfBirth())
                 .address(trainee.getAddress())
                 .trainers(trainee.getTrainers().stream().map(TrainerConverter::toEntity).collect(Collectors.toList()))
-                .trainings(new ArrayList<>())
-                //.trainings(trainee.getTrainings().stream().map(TrainingConverter::toEntity).collect(Collectors.toList()))
+                .trainings(trainee.getTrainings().stream().map(TrainingConverter::toEntity).collect(Collectors.toList()))
+                .build();
+    }
+    public static TraineeEntity toEntity(TraineeWithoutListsServiceDTO trainee) {
+        return TraineeEntity.builder()
+                .id(trainee.getId())
+                .firstName(trainee.getFirstName())
+                .lastName(trainee.getLastName())
+                .userName(trainee.getUserName())
+                .password(trainee.getPassword())
+                .isActive(trainee.isActive())
+                .dateOfBirth(trainee.getDateOfBirth())
+                .address(trainee.getAddress())
                 .build();
     }
 
@@ -67,6 +79,15 @@ public class TraineeConverter extends UserConverter {
 
     public static TraineeNestedDTO toNestedDTO(TraineeServiceDTO trainee) {
         return TraineeNestedDTO.builder()
+                .username(trainee.getUserName())
+                .firstName(trainee.getFirstName())
+                .lastName(trainee.getLastName())
+                .build();
+    }
+
+    public static TraineeNestedDTO toNestedDTO(TraineeWithoutListsServiceDTO trainee) {
+        return TraineeNestedDTO.builder()
+                .username(trainee.getUserName())
                 .firstName(trainee.getFirstName())
                 .lastName(trainee.getLastName())
                 .build();
@@ -80,7 +101,7 @@ public class TraineeConverter extends UserConverter {
                 .isActive(trainee.isActive())
                 .dateOfBirth(trainee.getDateOfBirth())
                 .address(trainee.getAddress())
-                .trainers(trainee.getTrainers().stream().map(TrainerConverter::toGetResponseDTO).collect(Collectors.toList()))
+                .trainers(trainee.getTrainers().stream().map(TrainerConverter::toNestedDTO).collect(Collectors.toList()))
                 .build();
     }
 
@@ -89,11 +110,37 @@ public class TraineeConverter extends UserConverter {
                 .userName(trainee.getUsername())
                 .firstName(trainee.getFirstName())
                 .lastName(trainee.getLastName())
-                .isActive(trainee.isActive())
+                .isActive(trainee.getIsActive())
                 .dateOfBirth(trainee.getDateOfBirth())
                 .address(trainee.getAddress())
                 .trainers(new ArrayList<>())
                 .trainings(new ArrayList<>())
+                .build();
+    }
+
+    public static TraineeWithoutListsServiceDTO toWithoutListDTO(TraineeEntity trainee) {
+        return TraineeWithoutListsServiceDTO.builder()
+                .id(trainee.getId())
+                .userName(trainee.getUserName())
+                .firstName(trainee.getFirstName())
+                .lastName(trainee.getLastName())
+                .password(trainee.getPassword())
+                .isActive(trainee.isActive())
+                .dateOfBirth(trainee.getDateOfBirth())
+                .address(trainee.getAddress())
+                .build();
+    }
+
+    public static TraineeWithoutListsServiceDTO toWithoutListDTO(TraineeServiceDTO trainee) {
+        return TraineeWithoutListsServiceDTO.builder()
+                .id(trainee.getId())
+                .userName(trainee.getUserName())
+                .firstName(trainee.getFirstName())
+                .lastName(trainee.getLastName())
+                .password(trainee.getPassword())
+                .isActive(trainee.isActive())
+                .dateOfBirth(trainee.getDateOfBirth())
+                .address(trainee.getAddress())
                 .build();
     }
 }

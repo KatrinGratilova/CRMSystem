@@ -1,11 +1,11 @@
 package org.example.crmsystem.converter;
 
 import org.example.crmsystem.dto.user.UserServiceDTO;
-import org.example.crmsystem.dto.user.UserRegistrationResponseDTO;
+import org.example.crmsystem.dto.user.UserCredentialsDTO;
 
 public class UserConverter {
-    public static UserRegistrationResponseDTO toRegistrationResponseDTO(UserServiceDTO user){
-        return UserRegistrationResponseDTO.builder()
+    public static UserCredentialsDTO toRegistrationResponseDTO(UserServiceDTO user){
+        return UserCredentialsDTO.builder()
                 .username(user.getUserName())
                 .password(user.getPassword())
                 .build();
