@@ -19,7 +19,9 @@ public enum ExceptionMessages {
     USER_IS_NOT_AUTHENTICATED_WITH_USERNAME("User with userName %s is not authenticated."),
 
     TRAINEE_WITH_USERNAME_IS_NOT_FOUND("Trainee with userName %s is not found."),
-    TRAINER_WITH_USERNAME_IS_NOT_FOUND("Trainer with userName %s is not found.");
+    TRAINER_WITH_USERNAME_IS_NOT_FOUND("Trainer with userName %s is not found."),
+
+    INVALID_REQUEST_BODY("Request body is invalid. Request body is required and cannot be empty.");
 
     private final String message;
 
