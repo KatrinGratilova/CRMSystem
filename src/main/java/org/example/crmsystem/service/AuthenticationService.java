@@ -1,13 +1,15 @@
 package org.example.crmsystem.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.logging.log4j.ThreadContext;
 import org.example.crmsystem.dao.interfaces.TraineeDAO;
 import org.example.crmsystem.dao.interfaces.TrainerDAO;
 import org.example.crmsystem.entity.TraineeEntity;
 import org.example.crmsystem.entity.TrainerEntity;
 import org.example.crmsystem.entity.UserEntity;
-import org.example.crmsystem.exception.EntityNotFoundException;
+import org.example.crmsystem.exception.UserIsNotAuthenticated;
 import org.example.crmsystem.messages.ExceptionMessages;
 import org.example.crmsystem.messages.LogMessages;
 import org.springframework.stereotype.Service;
@@ -24,43 +26,51 @@ public class AuthenticationService {
     private final TrainerDAO trainerDAO;
     private final Map<Long, String> authenticatedUsers = new HashMap<>();
 
-    public boolean authenticate(String userName, String password) {
-        UserEntity user = findUserByUsername(userName);
+    public boolean authenticate(String username, String password) {
+        String transactionId = ThreadContext.get("transactionId");
+        UserEntity user = findUserByUsername(username);
 
         if (user != null && user.getPassword().equals(password)) {
-            authenticatedUsers.put(user.getId(), userName);
-            log.info(LogMessages.USER_WAS_AUTHENTICATED.getMessage(), userName);
+            authenticatedUsers.put(user.getId(), username);
+            log.info(LogMessages.USER_WAS_AUTHENTICATED.getMessage(), transactionId, username);
             return true;
         }
-        log.warn(LogMessages.USER_DOES_NOT_EXIST.getMessage(), userName);
+        log.warn(LogMessages.USER_DOES_NOT_EXIST.getMessage(), transactionId, username);
         return false;
     }
 
-    public boolean isAuthenticated(String userName) {
-        boolean isAuthenticated = authenticatedUsers.containsValue(userName);
+    public boolean isAuthenticated(String username) throws UserIsNotAuthenticated {
+        String transactionId = ThreadContext.get("transactionId");
+        boolean isAuthenticated = authenticatedUsers.containsValue(username);
 
         if (isAuthenticated)
-            log.info(LogMessages.USER_IS_AUTHENTICATED_BY_USERNAME.getMessage(), userName);
+            log.info(LogMessages.USER_IS_AUTHENTICATED.getMessage(), transactionId, username);
         else
-            log.warn(LogMessages.USER_IS_NOT_AUTHENTICATED_BY_USERNAME.getMessage(), userName);
+            log.warn(LogMessages.USER_IS_NOT_AUTHENTICATED.getMessage(), transactionId, username);
+
         return isAuthenticated;
     }
 
-    public boolean changePassword(String username, String oldPassword, String newPassword) throws EntityNotFoundException {
-        UserEntity user = findUserByUsername(username);
+    public boolean changePassword(String username, String oldPassword, String newPassword) throws EntityNotFoundException, UserIsNotAuthenticated {
+        String transactionId = ThreadContext.get("transactionId");
 
-        if (user != null) {
-            log.debug(LogMessages.ATTEMPTING_TO_CHANGE_USER_PASSWORD.getMessage(), username);
+        if (isAuthenticated(username)) {
+            UserEntity user = findUserByUsername(username);
 
-            if (user.getPassword().equals(oldPassword)) {
-                user.setPassword(newPassword);
-                updateUser(user);
-                log.info(LogMessages.USER_PASSWORD_CHANGED.getMessage(), username);
-                return true;
+            if (user != null) {
+                log.debug(LogMessages.ATTEMPTING_TO_CHANGE_USER_PASSWORD.getMessage(), transactionId, username);
+
+                if (user.getPassword().equals(oldPassword)) {
+                    user.setPassword(newPassword);
+                    updateUser(user);
+                    log.info(LogMessages.USER_PASSWORD_CHANGED.getMessage(), transactionId, username);
+                    return true;
+                }
+                log.warn(LogMessages.USER_PASSWORD_NOT_CHANGED.getMessage(), transactionId, username);
             }
-            log.warn(LogMessages.USER_PASSWORD_NOT_CHANGED.getMessage(), username);
+            throw new EntityNotFoundException(ExceptionMessages.USER_NOT_FOUND_BY_USERNAME.format(username));
         }
-        throw new EntityNotFoundException(ExceptionMessages.USER_NOT_FOUND_BY_USERNAME.format(username));
+        return false;
     }
 
     private UserEntity findUserByUsername(String username) {
