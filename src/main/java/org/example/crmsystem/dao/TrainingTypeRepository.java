@@ -1,7 +1,9 @@
 package org.example.crmsystem.dao;
 
 import lombok.extern.log4j.Log4j2;
+import org.apache.logging.log4j.ThreadContext;
 import org.example.crmsystem.entity.TrainingTypeEntity;
+import org.example.crmsystem.messages.LogMessages;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -21,7 +23,9 @@ public class TrainingTypeRepository {
     }
 
     public TrainingTypeEntity add(TrainingTypeEntity traineeEntity) {
+        String transactionId = ThreadContext.get("transactionId");
         Transaction transaction = null;
+
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
             if (traineeEntity.getId() == 0)
@@ -31,7 +35,7 @@ public class TrainingTypeRepository {
             transaction.commit();
         } catch (Exception e) {
             if (transaction != null) transaction.rollback();
-            log.error(e.getMessage());
+            log.error(LogMessages.ERROR_OCCURRED.getMessage(), transactionId, e.getMessage());
         }
         return traineeEntity;
     }
