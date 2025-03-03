@@ -26,7 +26,7 @@ public class TrainerConverter extends UserConverter {
     public static TrainerServiceDTO toServiceDTO(TrainerEntity trainer) {
         return TrainerServiceDTO.builder()
                 .id(trainer.getId())
-                .userName(trainer.getUserName())
+                .username(trainer.getUsername())
                 .password(trainer.getPassword())
                 .firstName(trainer.getFirstName())
                 .lastName(trainer.getLastName())
@@ -42,7 +42,7 @@ public class TrainerConverter extends UserConverter {
                 .id(trainer.getId())
                 .firstName(trainer.getFirstName())
                 .lastName(trainer.getLastName())
-                .userName(trainer.getUserName())
+                .username(trainer.getUsername())
                 .isActive(trainer.isActive())
                 .specialization(trainer.getSpecialization())
                 .password(trainer.getPassword())
@@ -56,7 +56,7 @@ public class TrainerConverter extends UserConverter {
                 .id(trainer.getId())
                 .firstName(trainer.getFirstName())
                 .lastName(trainer.getLastName())
-                .userName(trainer.getUserName())
+                .username(trainer.getUsername())
                 .isActive(trainer.isActive())
                 .specialization(trainer.getSpecialization())
                 .password(trainer.getPassword())
@@ -75,7 +75,7 @@ public class TrainerConverter extends UserConverter {
 
     public static TrainerNestedDTO toNestedDTO(TrainerWithoutListsServiceDTO trainer) {
         return TrainerNestedDTO.builder()
-                .username(trainer.getUserName())
+                .username(trainer.getUsername())
                 .firstName(trainer.getFirstName())
                 .lastName(trainer.getLastName())
                 .specialization(trainer.getSpecialization())
@@ -84,7 +84,7 @@ public class TrainerConverter extends UserConverter {
 
     public static TrainerNestedDTO toNestedDTO(TrainerEntity trainer) {
         return TrainerNestedDTO.builder()
-                .username(trainer.getUserName())
+                .username(trainer.getUsername())
                 .firstName(trainer.getFirstName())
                 .lastName(trainer.getLastName())
                 .specialization(trainer.getSpecialization())
@@ -94,7 +94,7 @@ public class TrainerConverter extends UserConverter {
     public static TrainerWithoutListsServiceDTO toWithoutListDTO(TrainerEntity trainer) {
         return TrainerWithoutListsServiceDTO.builder()
                 .id(trainer.getId())
-                .userName(trainer.getUserName())
+                .username(trainer.getUsername())
                 .firstName(trainer.getFirstName())
                 .lastName(trainer.getLastName())
                 .password(trainer.getPassword())
@@ -106,7 +106,7 @@ public class TrainerConverter extends UserConverter {
     public static TrainerWithoutListsServiceDTO toWithoutListDTO(TrainerServiceDTO trainer) {
         return TrainerWithoutListsServiceDTO.builder()
                 .id(trainer.getId())
-                .userName(trainer.getUserName())
+                .username(trainer.getUsername())
                 .firstName(trainer.getFirstName())
                 .lastName(trainer.getLastName())
                 .password(trainer.getPassword())
@@ -117,7 +117,7 @@ public class TrainerConverter extends UserConverter {
 
     public static TrainerUpdateResponseDTO toUpdateResponseDTO(TrainerServiceDTO trainer) {
         return TrainerUpdateResponseDTO.builder()
-                .username(trainer.getUserName())
+                .username(trainer.getUsername())
                 .firstName(trainer.getFirstName())
                 .lastName(trainer.getLastName())
                 .isActive(trainer.isActive())
@@ -128,7 +128,7 @@ public class TrainerConverter extends UserConverter {
 
     public static TrainerServiceDTO toServiceDTO(TrainerUpdateRequestDTO trainer) {
         return TrainerServiceDTO.builder()
-                .userName(trainer.getUsername())
+                .username(trainer.getUsername())
                 .firstName(trainer.getFirstName())
                 .lastName(trainer.getLastName())
                 .isActive(trainer.getIsActive())

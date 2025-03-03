@@ -82,7 +82,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String, Object> body = objectMapper.readValue(requestBody, Map.class);
 
-            System.out.println(body);
             if (body.containsKey("username")) {
                 username = body.get("username").toString();
                 return username;

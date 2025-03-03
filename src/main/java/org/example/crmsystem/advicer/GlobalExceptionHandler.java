@@ -1,6 +1,7 @@
 package org.example.crmsystem.advicer;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.example.crmsystem.exception.IncompatibleSpecialization;
 import org.example.crmsystem.messages.ExceptionMessages;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +38,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<String> handleEntityNotFound(EntityNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ex.getMessage());
+    }
+
+    @ExceptionHandler(IncompatibleSpecialization.class)
+    public ResponseEntity<String> handleIncompatibleSpecialization(IncompatibleSpecialization ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ex.getMessage());
     }
 }

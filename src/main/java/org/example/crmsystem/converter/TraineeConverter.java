@@ -27,7 +27,7 @@ public class TraineeConverter extends UserConverter {
     public static TraineeServiceDTO toServiceDTO(TraineeEntity trainee) {
         return TraineeServiceDTO.builder()
                 .id(trainee.getId())
-                .userName(trainee.getUserName())
+                .username(trainee.getUsername())
                 .password(trainee.getPassword())
                 .firstName(trainee.getFirstName())
                 .lastName(trainee.getLastName())
@@ -44,7 +44,7 @@ public class TraineeConverter extends UserConverter {
                 .id(trainee.getId())
                 .firstName(trainee.getFirstName())
                 .lastName(trainee.getLastName())
-                .userName(trainee.getUserName())
+                .username(trainee.getUsername())
                 .password(trainee.getPassword())
                 .isActive(trainee.isActive())
                 .dateOfBirth(trainee.getDateOfBirth())
@@ -59,7 +59,7 @@ public class TraineeConverter extends UserConverter {
                 .id(trainee.getId())
                 .firstName(trainee.getFirstName())
                 .lastName(trainee.getLastName())
-                .userName(trainee.getUserName())
+                .username(trainee.getUsername())
                 .password(trainee.getPassword())
                 .isActive(trainee.isActive())
                 .dateOfBirth(trainee.getDateOfBirth())
@@ -80,7 +80,7 @@ public class TraineeConverter extends UserConverter {
 
     public static TraineeNestedDTO toNestedDTO(TraineeWithoutListsServiceDTO trainee) {
         return TraineeNestedDTO.builder()
-                .username(trainee.getUserName())
+                .username(trainee.getUsername())
                 .firstName(trainee.getFirstName())
                 .lastName(trainee.getLastName())
                 .build();
@@ -88,7 +88,7 @@ public class TraineeConverter extends UserConverter {
 
     public static TraineeUpdateResponseDTO toUpdateResponseDTO(TraineeServiceDTO trainee) {
         return TraineeUpdateResponseDTO.builder()
-                .username(trainee.getUserName())
+                .username(trainee.getUsername())
                 .firstName(trainee.getFirstName())
                 .lastName(trainee.getLastName())
                 .isActive(trainee.isActive())
@@ -100,7 +100,7 @@ public class TraineeConverter extends UserConverter {
 
     public static TraineeServiceDTO toServiceDTO(TraineeUpdateRequestDTO trainee) {
         return TraineeServiceDTO.builder()
-                .userName(trainee.getUsername())
+                .username(trainee.getUsername())
                 .firstName(trainee.getFirstName())
                 .lastName(trainee.getLastName())
                 .isActive(trainee.getIsActive())
@@ -114,7 +114,7 @@ public class TraineeConverter extends UserConverter {
     public static TraineeWithoutListsServiceDTO toWithoutListDTO(TraineeEntity trainee) {
         return TraineeWithoutListsServiceDTO.builder()
                 .id(trainee.getId())
-                .userName(trainee.getUserName())
+                .username(trainee.getUsername())
                 .firstName(trainee.getFirstName())
                 .lastName(trainee.getLastName())
                 .password(trainee.getPassword())
@@ -127,7 +127,7 @@ public class TraineeConverter extends UserConverter {
     public static TraineeWithoutListsServiceDTO toWithoutListDTO(TraineeServiceDTO trainee) {
         return TraineeWithoutListsServiceDTO.builder()
                 .id(trainee.getId())
-                .userName(trainee.getUserName())
+                .username(trainee.getUsername())
                 .firstName(trainee.getFirstName())
                 .lastName(trainee.getLastName())
                 .password(trainee.getPassword())

@@ -47,7 +47,7 @@ public class TrainingEntity {
         return "TrainingEntity{" +
                 "id=" + id +
                 ", trainee=" + (trainee != null ? trainee.getId() : "null") +
-                ", trainer=" + (trainer != null ? trainer.getUserName() : "null") +
+                ", trainer=" + (trainer != null ? trainer.getUsername() : "null") +
                 ", trainingName='" + trainingName + '\'' +
                 ", trainingType=" + trainingType +
                 ", trainingDate=" + trainingDate +

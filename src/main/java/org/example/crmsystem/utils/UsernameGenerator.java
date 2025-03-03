@@ -15,9 +15,9 @@ public class UsernameGenerator {
         this.trainerDAO = trainerDAO;
     }
 
-    public String generateUserName(UserServiceDTO userDTO) {
+    public String generateUsername(UserServiceDTO userDTO) {
         String userName = userDTO.getFirstName() + "." + userDTO.getLastName();
-        int suffix = traineeDAO.getWhereUserNameStartsWith(userName).size() + trainerDAO.getWhereUserNameStartsWith(userName).size();
+        int suffix = traineeDAO.getWhereUsernameStartsWith(userName).size() + trainerDAO.getWhereUsernameStartsWith(userName).size();
         return suffix == 0 ? userName : userName + suffix;
     }
 }

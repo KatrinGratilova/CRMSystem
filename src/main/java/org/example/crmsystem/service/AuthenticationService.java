@@ -46,11 +46,11 @@ public class AuthenticationService {
         if (isAuthenticated)
             log.info(LogMessages.USER_IS_AUTHENTICATED.getMessage(), transactionId, username);
         else {
-            if (traineeDAO.getByUserName(username).isPresent())
+            if (traineeDAO.getByUsername(username).isPresent())
                 log.warn(LogMessages.USER_IS_NOT_AUTHENTICATED.getMessage(), transactionId, username);
             else {
                 log.warn(LogMessages.USER_DOES_NOT_EXIST.getMessage(), transactionId, username);
-                throw new EntityNotFoundException(ExceptionMessages.USER_NOT_FOUND_BY_USERNAME.format(username));
+                throw new EntityNotFoundException(ExceptionMessages.USER_NOT_FOUND.format(username));
             }
         }
         return isAuthenticated;
@@ -72,20 +72,21 @@ public class AuthenticationService {
                     return true;
                 }
                 log.warn(LogMessages.USER_PASSWORD_NOT_CHANGED.getMessage(), transactionId, username);
+                return false;
             }
-            throw new EntityNotFoundException(ExceptionMessages.USER_NOT_FOUND_BY_USERNAME.format(username));
+            throw new EntityNotFoundException(ExceptionMessages.USER_NOT_FOUND.format(username));
         }
         return false;
     }
 
     private UserEntity findUserByUsername(String username) {
-        Optional<TraineeEntity> trainee = traineeDAO.getByUserName(username);
+        Optional<TraineeEntity> trainee = traineeDAO.getByUsername(username);
         if (trainee.isPresent()) return trainee.get();
-        return trainerDAO.getByUserName(username).orElse(null);
+        return trainerDAO.getByUsername(username).orElse(null);
     }
 
     private void updateUser(UserEntity user) throws EntityNotFoundException {
-        if (traineeDAO.getByUserName(user.getUserName()).isPresent())
+        if (traineeDAO.getByUsername(user.getUsername()).isPresent())
             traineeDAO.updatePassword((TraineeEntity) user);
         else
             trainerDAO.updatePassword((TrainerEntity) user);

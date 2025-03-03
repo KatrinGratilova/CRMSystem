@@ -7,6 +7,7 @@ import org.example.crmsystem.converter.TrainingConverter;
 import org.example.crmsystem.dao.interfaces.TrainingDAO;
 import org.example.crmsystem.dto.training.TrainingServiceDTO;
 import org.example.crmsystem.entity.TrainingEntity;
+import org.example.crmsystem.exception.IncompatibleSpecialization;
 import org.example.crmsystem.messages.LogMessages;
 import org.springframework.stereotype.Service;
 
@@ -16,11 +17,11 @@ import org.springframework.stereotype.Service;
 public class TrainingService {
     private final TrainingDAO trainingRepository;
 
-    public TrainingServiceDTO add(TrainingServiceDTO trainingDTO) {
+    public TrainingServiceDTO create(TrainingServiceDTO trainingDTO) throws IncompatibleSpecialization {
         String transactionId = ThreadContext.get("transactionId");
         log.debug(LogMessages.ATTEMPTING_TO_ADD_NEW_TRAINING.getMessage(), transactionId, trainingDTO.getTrainingName());
 
-        TrainingEntity trainingEntity = trainingRepository.add(TrainingConverter.toEntity(trainingDTO));
+        TrainingEntity trainingEntity = trainingRepository.create(TrainingConverter.toEntity(trainingDTO));
 
         log.info(LogMessages.ADDED_NEW_TRAINING.getMessage(), transactionId, trainingEntity.getTrainingName());
         return TrainingConverter.toServiceDTO(trainingEntity);

@@ -74,8 +74,7 @@ public enum LogMessages {
     ATTEMPTING_TO_UPDATE_TRAINEE_TRAINERS("TransactionId: {}. Attempting to update trainee trainers with username: {}"),
     TRAINEE_TRAINERS_UPDATED("TransactionId: {}. Trainee trainers with username {} updated successfully."),
 
-    ERROR_OCCURRED("TransactionId: {}. Error occurred: {}"),
-    ;
+    ERROR_OCCURRED("TransactionId: {}. Error occurred: {}");
 
     private final String message;
 }

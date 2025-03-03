@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.crmsystem.converter.TrainingConverter;
 import org.example.crmsystem.dto.training.TrainingAddRequestDTO;
 import jakarta.persistence.EntityNotFoundException;
+import org.example.crmsystem.exception.IncompatibleSpecialization;
 import org.example.crmsystem.exception.UserIsNotAuthenticated;
 import org.example.crmsystem.service.TrainingService;
 import org.springframework.http.HttpStatus;
@@ -32,8 +33,8 @@ public class TrainingController {
             @ApiResponse(responseCode = "404", description = "Trainer or trainee not found"),
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
-    public ResponseEntity<HttpStatus> addTraining(@Valid @RequestBody TrainingAddRequestDTO training) throws UserIsNotAuthenticated, EntityNotFoundException {
-        trainingService.add(TrainingConverter.toServiceDTO(training));
+    public ResponseEntity<HttpStatus> addTraining(@Valid @RequestBody TrainingAddRequestDTO training) throws UserIsNotAuthenticated, EntityNotFoundException, IncompatibleSpecialization {
+        trainingService.create(TrainingConverter.toServiceDTO(training));
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

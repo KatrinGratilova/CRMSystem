@@ -41,12 +41,12 @@ public class TraineeService {
         log.debug(LogMessages.ATTEMPTING_TO_ADD_NEW_TRAINEE.getMessage(), transactionId, traineeDTO.getFirstName());
 
         traineeDTO.setPassword(passwordGenerator.generateUserPassword());
-        traineeDTO.setUserName(usernameGenerator.generateUserName(traineeDTO));
+        traineeDTO.setUsername(usernameGenerator.generateUsername(traineeDTO));
 
         TraineeEntity addedTraineeEntity = traineeRepository.add(TraineeConverter.toEntity(traineeDTO));
-        authenticationService.authenticate(traineeDTO.getUserName(), traineeDTO.getPassword());
+        authenticationService.authenticate(traineeDTO.getUsername(), traineeDTO.getPassword());
 
-        log.info(LogMessages.ADDED_NEW_TRAINEE.getMessage(), transactionId, addedTraineeEntity.getUserName());
+        log.info(LogMessages.ADDED_NEW_TRAINEE.getMessage(), transactionId, addedTraineeEntity.getUsername());
         return TraineeConverter.toServiceDTO(addedTraineeEntity);
     }
 
@@ -54,28 +54,28 @@ public class TraineeService {
         String transactionId = ThreadContext.get("transactionId");
         log.debug(LogMessages.RETRIEVING_TRAINEE.getMessage(), transactionId, username);
 
-        Optional<TraineeEntity> trainee = traineeRepository.getByUserName(username);
+        Optional<TraineeEntity> trainee = traineeRepository.getByUsername(username);
         if (trainee.isEmpty()) {
             log.warn(LogMessages.TRAINEE_NOT_FOUND.getMessage(), transactionId, username);
-            throw new EntityNotFoundException(ExceptionMessages.TRAINEE_NOT_FOUND_BY_USERNAME.format(username));
+            throw new EntityNotFoundException(ExceptionMessages.TRAINEE_NOT_FOUND.format(username));
         } else {
-            log.info(LogMessages.TRAINEE_FOUND.getMessage(), transactionId, trainee.get().getId());
+            log.info(LogMessages.TRAINEE_FOUND.getMessage(), transactionId, trainee.get().getUsername());
             return TraineeConverter.toServiceDTO(trainee.get());
         }
     }
 
     public TraineeServiceDTO update(TraineeServiceDTO traineeDTO) throws EntityNotFoundException {
         String transactionId = ThreadContext.get("transactionId");
-        log.debug(LogMessages.ATTEMPTING_TO_UPDATE_TRAINEE.getMessage(), transactionId, traineeDTO.getUserName());
+        log.debug(LogMessages.ATTEMPTING_TO_UPDATE_TRAINEE.getMessage(), transactionId, traineeDTO.getUsername());
 
         TraineeEntity updatedTraineeEntity = TraineeConverter.toEntity(traineeDTO);
         try {
             updatedTraineeEntity = traineeRepository.update(updatedTraineeEntity);
         } catch (EntityNotFoundException e) {
-            log.warn(LogMessages.TRAINEE_NOT_FOUND.getMessage(), transactionId, updatedTraineeEntity.getUserName());
+            log.warn(LogMessages.TRAINEE_NOT_FOUND.getMessage(), transactionId, updatedTraineeEntity.getUsername());
             throw e;
         }
-        log.info(LogMessages.UPDATED_TRAINEE.getMessage(), transactionId, updatedTraineeEntity.getUserName());
+        log.info(LogMessages.UPDATED_TRAINEE.getMessage(), transactionId, updatedTraineeEntity.getUsername());
         return TraineeConverter.toServiceDTO(updatedTraineeEntity);
     }
 
@@ -83,7 +83,7 @@ public class TraineeService {
         String transactionId = ThreadContext.get("transactionId");
         log.debug(LogMessages.ATTEMPTING_TO_DELETE_TRAINEE.getMessage(), transactionId, username);
 
-        traineeRepository.deleteByUserName(username);
+        traineeRepository.deleteByUsername(username);
         log.info(LogMessages.DELETED_TRAINEE.getMessage(), transactionId, username);
     }
 
@@ -130,8 +130,8 @@ public class TraineeService {
         String transactionId = ThreadContext.get("transactionId");
         log.debug(LogMessages.ATTEMPTING_TO_UPDATE_TRAINEE_TRAINERS.getMessage(), transactionId, traineeUsername);
 
-        TraineeEntity trainee = traineeRepository.getByUserName(traineeUsername)
-                .orElseThrow(() -> new EntityNotFoundException(ExceptionMessages.TRAINEE_NOT_FOUND_BY_USERNAME.format(traineeUsername)));
+        TraineeEntity trainee = traineeRepository.getByUsername(traineeUsername)
+                .orElseThrow(() -> new EntityNotFoundException(ExceptionMessages.TRAINEE_NOT_FOUND.format(traineeUsername)));
 
         List<TrainerEntity> trainerEntities = trainerUsernames.stream()
                 .map(trainerService::getByUsername)

@@ -20,7 +20,7 @@ public interface TraineeDAO extends HavingUserName<TraineeEntity> {
 
     void updatePassword(TraineeEntity traineeEntity) throws EntityNotFoundException;
 
-    void deleteByUserName(String userName);
+    void deleteByUsername(String userName);
 
     boolean delete(TraineeEntity traineeEntity);
 

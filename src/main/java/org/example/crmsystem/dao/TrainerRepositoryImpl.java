@@ -53,10 +53,10 @@ public class TrainerRepositoryImpl implements TrainerDAO {
     }
 
     @Override
-    public Optional<TrainerEntity> getByUserName(String userName) {
+    public Optional<TrainerEntity> getByUsername(String username) {
         try (Session session = sessionFactory.openSession()) {
             Query<TrainerEntity> query = session.createQuery(TrainerQueries.GET_BY_USERNAME.getQuery(), TrainerEntity.class);
-            query.setParameter("userName", userName);
+            query.setParameter("username", username);
 
             List<TrainerEntity> resultList = query.getResultList();
             return resultList.isEmpty() ? Optional.empty() : Optional.of(resultList.get(0));
@@ -64,10 +64,10 @@ public class TrainerRepositoryImpl implements TrainerDAO {
     }
 
     @Override
-    public List<TrainerEntity> getWhereUserNameStartsWith(String userName) {
+    public List<TrainerEntity> getWhereUsernameStartsWith(String username) {
         try (Session session = sessionFactory.openSession()) {
             Query<TrainerEntity> query = session.createQuery(TrainerQueries.GET_WHERE_USERNAME_STARTS_WITH.getQuery(), TrainerEntity.class);
-            query.setParameter("userName", userName + "%");
+            query.setParameter("username", username + "%");
 
             return query.getResultList();
         }
@@ -82,7 +82,7 @@ public class TrainerRepositoryImpl implements TrainerDAO {
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
 
-            Optional<TrainerEntity> trainerOptional = getByUserName(trainerModified.getUserName());
+            Optional<TrainerEntity> trainerOptional = getByUsername(trainerModified.getUsername());
             if (trainerOptional.isPresent()) {
                 trainer = trainerOptional.get();
 
@@ -93,7 +93,7 @@ public class TrainerRepositoryImpl implements TrainerDAO {
 
                 session.merge(trainer);
             } else
-                throw new EntityNotFoundException(ExceptionMessages.TRAINER_NOT_FOUND.format(trainerModified.getUserName()));
+                throw new EntityNotFoundException(ExceptionMessages.TRAINER_NOT_FOUND.format(trainerModified.getUsername()));
             transaction.commit();
         } catch (Exception e) {
             log.error(LogMessages.ERROR_OCCURRED.getMessage(), transactionId, e.getMessage());
@@ -110,14 +110,14 @@ public class TrainerRepositoryImpl implements TrainerDAO {
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
 
-            Optional<TrainerEntity> traineeOptional = getByUserName(trainerEntity.getUserName());
+            Optional<TrainerEntity> traineeOptional = getByUsername(trainerEntity.getUsername());
             if (traineeOptional.isPresent()) {
                 TrainerEntity savedTrainee = traineeOptional.get();
 
                 trainerEntity.setId(savedTrainee.getId());
                 session.merge(trainerEntity);
             } else
-                throw new EntityNotFoundException(ExceptionMessages.TRAINEE_NOT_FOUND.format(trainerEntity.getUserName()));
+                throw new EntityNotFoundException(ExceptionMessages.TRAINEE_NOT_FOUND.format(trainerEntity.getUsername()));
             transaction.commit();
         } catch (Exception e) {
             log.error(LogMessages.ERROR_OCCURRED.getMessage(), transactionId, e.getMessage());
@@ -133,7 +133,7 @@ public class TrainerRepositoryImpl implements TrainerDAO {
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
 
-            Optional<TrainerEntity> trainerOptional = getByUserName(username);
+            Optional<TrainerEntity> trainerOptional = getByUsername(username);
             TrainerEntity trainer;
             if (trainerOptional.isPresent()) {
                 trainer = trainerOptional.get();
@@ -143,7 +143,7 @@ public class TrainerRepositoryImpl implements TrainerDAO {
                 transaction.commit();
                 return true;
             } else {
-                throw new EntityNotFoundException(ExceptionMessages.TRAINER_NOT_FOUND_BY_USERNAME.format(username));
+                throw new EntityNotFoundException(ExceptionMessages.TRAINER_NOT_FOUND.format(username));
             }
         } catch (Exception e) {
             log.error(LogMessages.ERROR_OCCURRED.getMessage(), transactionId, e.getMessage());
@@ -167,7 +167,7 @@ public class TrainerRepositoryImpl implements TrainerDAO {
             List<Predicate> predicates = new ArrayList<>();
 
             Join<TrainingEntity, TrainerEntity> trainerJoin = root.join("trainer");
-            predicates.add(cb.equal(trainerJoin.get("userName"), trainerUserName));
+            predicates.add(cb.equal(trainerJoin.get("username"), trainerUserName));
 
             if (fromDate != null)
                 predicates.add(cb.greaterThanOrEqualTo(root.get("trainingDate"), fromDate));
@@ -176,7 +176,7 @@ public class TrainerRepositoryImpl implements TrainerDAO {
 
             if (traineeName != null && !traineeName.isEmpty()) {
                 Join<TrainingEntity, TraineeEntity> traineeJoin = root.join("trainee");
-                predicates.add(cb.equal(traineeJoin.get("userName"), traineeName));
+                predicates.add(cb.equal(traineeJoin.get("username"), traineeName));
             }
             cq.where(predicates.toArray(new Predicate[0]));
             transaction.commit();

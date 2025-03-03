@@ -56,7 +56,7 @@ public class TrainingConverter {
 
     public static TrainingByTraineeDTO toByTraineeDTO(TrainingEntity training) {
         return TrainingByTraineeDTO.builder()
-                .trainerUsername(training.getTrainer().getUserName())
+                .trainerUsername(training.getTrainer().getUsername())
                 .trainingType(training.getTrainingType())
                 .trainingName(training.getTrainingName())
                 .trainingDate(training.getTrainingDate())
@@ -66,7 +66,7 @@ public class TrainingConverter {
 
     public static TrainingByTrainerDTO toByTrainerDTO(TrainingEntity training) {
         return TrainingByTrainerDTO.builder()
-                .traineeUsername(training.getTrainee().getUserName())
+                .traineeUsername(training.getTrainee().getUsername())
                 .trainingName(training.getTrainingName())
                 .trainingType(training.getTrainingType())
                 .trainingDate(training.getTrainingDate())

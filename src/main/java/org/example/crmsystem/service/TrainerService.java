@@ -36,13 +36,13 @@ public class TrainerService {
         String transactionId = ThreadContext.get("transactionId");
         log.debug(LogMessages.ADDED_NEW_TRAINER.getMessage(), transactionId, trainerDTO.getFirstName());
 
-        trainerDTO.setUserName(usernameGenerator.generateUserName(trainerDTO));
+        trainerDTO.setUsername(usernameGenerator.generateUsername(trainerDTO));
         trainerDTO.setPassword(passwordGenerator.generateUserPassword());
 
         TrainerEntity addedTrainerEntity = trainerRepository.add(TrainerConverter.toEntity(trainerDTO));
-        authenticationService.authenticate(trainerDTO.getUserName(), trainerDTO.getPassword());
+        authenticationService.authenticate(trainerDTO.getUsername(), trainerDTO.getPassword());
 
-        log.info(LogMessages.ADDED_NEW_TRAINER.getMessage(), addedTrainerEntity.getId());
+        log.info(LogMessages.ADDED_NEW_TRAINER.getMessage(), transactionId, addedTrainerEntity.getUsername());
         return TrainerConverter.toServiceDTO(addedTrainerEntity);
     }
 
@@ -50,28 +50,28 @@ public class TrainerService {
         String transactionId = ThreadContext.get("transactionId");
         log.debug(LogMessages.RETRIEVING_TRAINER.getMessage(), transactionId, username);
 
-        Optional<TrainerEntity> trainer = trainerRepository.getByUserName(username);
+        Optional<TrainerEntity> trainer = trainerRepository.getByUsername(username);
         if (trainer.isEmpty()) {
             log.warn(LogMessages.TRAINER_NOT_FOUND.getMessage(), transactionId, username);
-            throw new jakarta.persistence.EntityNotFoundException(ExceptionMessages.TRAINER_NOT_FOUND_BY_USERNAME.format(username));
+            throw new jakarta.persistence.EntityNotFoundException(ExceptionMessages.TRAINER_NOT_FOUND.format(username));
         } else {
-            log.info(LogMessages.TRAINER_FOUND.getMessage(), trainer.get().getId());
+            log.info(LogMessages.TRAINER_FOUND.getMessage(), transactionId, trainer.get().getUsername());
             return TrainerConverter.toServiceDTO(trainer.get());
         }
     }
 
     public TrainerServiceDTO update(TrainerServiceDTO trainerDTO) throws EntityNotFoundException {
         String transactionId = ThreadContext.get("transactionId");
-        log.debug(LogMessages.ATTEMPTING_TO_UPDATE_TRAINER.getMessage(), transactionId, trainerDTO.getUserName());
+        log.debug(LogMessages.ATTEMPTING_TO_UPDATE_TRAINER.getMessage(), transactionId, trainerDTO.getUsername());
 
         TrainerEntity updatedTrainerEntity = TrainerConverter.toEntity(trainerDTO);
         try {
             updatedTrainerEntity = trainerRepository.update(updatedTrainerEntity);
         } catch (EntityNotFoundException e) {
-            log.warn(LogMessages.TRAINER_NOT_FOUND.getMessage(), transactionId, updatedTrainerEntity.getUserName());
+            log.warn(LogMessages.TRAINER_NOT_FOUND.getMessage(), transactionId, updatedTrainerEntity.getUsername());
             throw e;
         }
-        log.info(LogMessages.UPDATED_TRAINER.getMessage(), transactionId, updatedTrainerEntity.getUserName());
+        log.info(LogMessages.UPDATED_TRAINER.getMessage(), transactionId, updatedTrainerEntity.getUsername());
         return TrainerConverter.toServiceDTO(updatedTrainerEntity);
     }
 
@@ -91,15 +91,15 @@ public class TrainerService {
     }
 
     public List<TrainingByTrainerDTO> getTrainerTrainingsByCriteria(
-            String trainerUserName, LocalDateTime fromDate, LocalDateTime toDate, String traineeName) {
+            String trainerUsername, LocalDateTime fromDate, LocalDateTime toDate, String traineeName) {
         String transactionId = ThreadContext.get("transactionId");
         log.debug(LogMessages.FETCHING_TRAININGS_FOR_TRAINER_BY_CRITERIA.getMessage(), transactionId,
-                trainerUserName, fromDate, toDate, traineeName);
+                trainerUsername, fromDate, toDate, traineeName);
 
         List<TrainingEntity> trainings = trainerRepository.getTrainerTrainingsByCriteria(
-                trainerUserName, fromDate, toDate, traineeName);
+                trainerUsername, fromDate, toDate, traineeName);
 
-        log.info(LogMessages.FOUND_TRAININGS_FOR_TRAINER.getMessage(), transactionId, trainings.size(), trainerUserName);
+        log.info(LogMessages.FOUND_TRAININGS_FOR_TRAINER.getMessage(), transactionId, trainings.size(), trainerUsername);
         return trainings.stream().map(TrainingConverter::toByTrainerDTO).collect(Collectors.toList());
     }
 }
