@@ -1,5 +1,9 @@
 package org.example.crmsystem.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.example.crmsystem.dto.user.UserChangeLoginDTO;
 import org.example.crmsystem.dto.user.UserCredentialsDTO;
@@ -13,10 +17,17 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/login")
 @RequiredArgsConstructor
+@Tag(name = "Authentication Controller", description = "Operations related to user authentication")
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @GetMapping
+    @Operation(summary = "Login user by credentials", description = "Logins user by credentials")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully authenticated user"),
+            @ApiResponse(responseCode = "404", description = "User not found"),
+            @ApiResponse(responseCode = "500", description = "Application failed to process the request")
+    })
     public ResponseEntity<HttpStatus> login(@RequestBody UserCredentialsDTO user) {
         boolean isAuthenticated = authenticationService.authenticate(user.getUsername(), user.getPassword());
 
@@ -27,6 +38,12 @@ public class AuthenticationController {
     }
 
     @PutMapping("/change-password")
+    @Operation(summary = "Change user password", description = "Changed user password")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully changed password"),
+            @ApiResponse(responseCode = "404", description = "User not found"),
+            @ApiResponse(responseCode = "500", description = "Application failed to process the request")
+    })
     public ResponseEntity<String> changePassword(@RequestBody UserChangeLoginDTO user) throws EntityNotFoundException, UserIsNotAuthenticated {
         boolean isChanged = authenticationService.changePassword(user.getUsername(), user.getOldPassword(), user.getNewPassword());
 
