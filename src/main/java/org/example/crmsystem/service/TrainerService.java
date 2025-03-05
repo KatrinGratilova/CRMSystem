@@ -6,6 +6,7 @@ import org.apache.logging.log4j.ThreadContext;
 import org.example.crmsystem.converter.TrainerConverter;
 import org.example.crmsystem.converter.TrainingConverter;
 import org.example.crmsystem.dao.interfaces.TrainerDAO;
+import org.example.crmsystem.dao.interfaces.TrainerRepositoryCustom;
 import org.example.crmsystem.dto.trainer.TrainerServiceDTO;
 import org.example.crmsystem.dto.training.TrainingByTrainerDTO;
 import org.example.crmsystem.dto.user.UserUpdateStatusRequestDTO;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TrainerService {
     private final TrainerDAO trainerRepository;
+    private final TrainerRepositoryCustom trainerRepositoryCustom;
     private final PasswordGenerator passwordGenerator;
     private final UsernameGenerator usernameGenerator;
     private final AuthenticationService authenticationService;
@@ -39,7 +41,7 @@ public class TrainerService {
         trainerDTO.setUsername(usernameGenerator.generateUsername(trainerDTO));
         trainerDTO.setPassword(passwordGenerator.generateUserPassword());
 
-        TrainerEntity addedTrainerEntity = trainerRepository.add(TrainerConverter.toEntity(trainerDTO));
+        TrainerEntity addedTrainerEntity = trainerRepository.save(TrainerConverter.toEntity(trainerDTO));
         authenticationService.authenticate(trainerDTO.getUsername(), trainerDTO.getPassword());
 
         log.info(LogMessages.ADDED_NEW_TRAINER.getMessage(), transactionId, addedTrainerEntity.getUsername());
@@ -50,7 +52,7 @@ public class TrainerService {
         String transactionId = ThreadContext.get("transactionId");
         log.debug(LogMessages.RETRIEVING_TRAINER.getMessage(), transactionId, username);
 
-        Optional<TrainerEntity> trainer = trainerRepository.getByUsername(username);
+        Optional<TrainerEntity> trainer = trainerRepositoryCustom.getByUsername(username);
         if (trainer.isEmpty()) {
             log.warn(LogMessages.TRAINER_NOT_FOUND.getMessage(), transactionId, username);
             throw new jakarta.persistence.EntityNotFoundException(ExceptionMessages.TRAINER_NOT_FOUND.format(username));
@@ -66,7 +68,7 @@ public class TrainerService {
 
         TrainerEntity updatedTrainerEntity = TrainerConverter.toEntity(trainerDTO);
         try {
-            updatedTrainerEntity = trainerRepository.update(updatedTrainerEntity);
+            updatedTrainerEntity = trainerRepositoryCustom.update(updatedTrainerEntity);
         } catch (EntityNotFoundException e) {
             log.warn(LogMessages.TRAINER_NOT_FOUND.getMessage(), transactionId, updatedTrainerEntity.getUsername());
             throw e;
@@ -81,7 +83,7 @@ public class TrainerService {
 
         boolean result;
         try {
-            result = trainerRepository.toggleActiveStatus(username, trainerStatus.getIsActive());
+            result = trainerRepositoryCustom.toggleActiveStatus(username, trainerStatus.getIsActive());
         } catch (EntityNotFoundException e) {
             log.warn(LogMessages.TRAINER_NOT_FOUND.getMessage(), transactionId, username);
             throw e;
@@ -96,7 +98,7 @@ public class TrainerService {
         log.debug(LogMessages.FETCHING_TRAININGS_FOR_TRAINER_BY_CRITERIA.getMessage(), transactionId,
                 trainerUsername, fromDate, toDate, traineeName);
 
-        List<TrainingEntity> trainings = trainerRepository.getTrainerTrainingsByCriteria(
+        List<TrainingEntity> trainings = trainerRepositoryCustom.getTrainerTrainingsByCriteria(
                 trainerUsername, fromDate, toDate, traineeName);
 
         log.info(LogMessages.FOUND_TRAININGS_FOR_TRAINER.getMessage(), transactionId, trainings.size(), trainerUsername);

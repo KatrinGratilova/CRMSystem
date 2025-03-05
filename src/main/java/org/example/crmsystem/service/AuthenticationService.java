@@ -4,8 +4,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.ThreadContext;
-import org.example.crmsystem.dao.TraineeRepositoryImpl;
-import org.example.crmsystem.dao.interfaces.TrainerDAO;
+import org.example.crmsystem.dao.interfaces.TraineeRepositoryCustom;
+import org.example.crmsystem.dao.interfaces.TrainerRepositoryCustom;
 import org.example.crmsystem.entity.TraineeEntity;
 import org.example.crmsystem.entity.TrainerEntity;
 import org.example.crmsystem.entity.UserEntity;
@@ -22,8 +22,8 @@ import java.util.Optional;
 @Log4j2
 @RequiredArgsConstructor
 public class AuthenticationService {
-    private final TraineeRepositoryImpl traineeDAO;
-    private final TrainerDAO trainerDAO;
+    private final TraineeRepositoryCustom traineeDAO;
+    private final TrainerRepositoryCustom trainerDAO;
     private final Map<Long, String> authenticatedUsers = new HashMap<>();
 
     public boolean authenticate(String username, String password) {

@@ -133,8 +133,12 @@ public class TraineeRepositoryImpl implements TraineeRepositoryCustom {
         String transactionId = ThreadContext.get("transactionId");
         try {
             Optional<TraineeEntity> trainee = getByUsername(username);
-            trainee.ifPresent(entityManager::remove);
-            trainee.ifPresent(traineeEntity -> entityManager.remove(traineeEntity.getTrainings()));
+            trainee.ifPresent(entity -> {
+                // Удаляем все тренировки, если они есть
+                entity.getTrainings().forEach(entityManager::remove);
+                // Удаляем самого trainee
+                entityManager.remove(entity);
+            });
         } catch (Exception e) {
             log.error(LogMessages.ERROR_OCCURRED.getMessage(), transactionId, e.getMessage());
         }

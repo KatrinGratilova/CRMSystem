@@ -8,6 +8,7 @@ import org.example.crmsystem.converter.TraineeConverter;
 import org.example.crmsystem.converter.TrainerConverter;
 import org.example.crmsystem.converter.TrainingConverter;
 import org.example.crmsystem.dao.interfaces.TraineeDAO;
+import org.example.crmsystem.dao.interfaces.TraineeRepositoryCustom;
 import org.example.crmsystem.dto.trainee.TraineeServiceDTO;
 import org.example.crmsystem.dto.trainer.TrainerNestedDTO;
 import org.example.crmsystem.dto.training.TrainingByTraineeDTO;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TraineeService {
     private final TraineeDAO traineeRepository;
+    private final TraineeRepositoryCustom traineeRepositoryCustom;
     private final PasswordGenerator passwordGenerator;
     private final UsernameGenerator usernameGenerator;
     private final AuthenticationService authenticationService;
@@ -54,7 +56,7 @@ public class TraineeService {
         String transactionId = ThreadContext.get("transactionId");
         log.debug(LogMessages.RETRIEVING_TRAINEE.getMessage(), transactionId, username);
 
-        Optional<TraineeEntity> trainee = traineeRepository.getByUsername(username);
+        Optional<TraineeEntity> trainee = traineeRepositoryCustom.getByUsername(username);
         if (trainee.isEmpty()) {
             log.warn(LogMessages.TRAINEE_NOT_FOUND.getMessage(), transactionId, username);
             throw new EntityNotFoundException(ExceptionMessages.TRAINEE_NOT_FOUND.format(username));
@@ -70,7 +72,7 @@ public class TraineeService {
 
         TraineeEntity updatedTraineeEntity = TraineeConverter.toEntity(traineeDTO);
         try {
-            updatedTraineeEntity = traineeRepository.updateMainInfo(updatedTraineeEntity);
+            updatedTraineeEntity = traineeRepositoryCustom.updateMainInfo(updatedTraineeEntity);
         } catch (EntityNotFoundException e) {
             log.warn(LogMessages.TRAINEE_NOT_FOUND.getMessage(), transactionId, updatedTraineeEntity.getUsername());
             throw e;
@@ -83,7 +85,7 @@ public class TraineeService {
         String transactionId = ThreadContext.get("transactionId");
         log.debug(LogMessages.ATTEMPTING_TO_DELETE_TRAINEE.getMessage(), transactionId, username);
 
-        traineeRepository.deleteByUsername(username);
+        traineeRepositoryCustom.deleteByUsername(username);
         log.info(LogMessages.DELETED_TRAINEE.getMessage(), transactionId, username);
     }
 
@@ -93,7 +95,7 @@ public class TraineeService {
 
         boolean result;
         try {
-            result = traineeRepository.toggleActiveStatus(username, traineeStatus.getIsActive());
+            result = traineeRepositoryCustom.toggleActiveStatus(username, traineeStatus.getIsActive());
         } catch (EntityNotFoundException e) {
             log.warn(LogMessages.TRAINEE_NOT_FOUND.getMessage(), transactionId, username);
             throw e;
@@ -108,7 +110,7 @@ public class TraineeService {
         log.debug(LogMessages.FETCHING_TRAININGS_FOR_TRAINEE_BY_CRITERIA.getMessage(),
                 transactionId, traineeUsername, fromDate, toDate, trainerName, trainingType);
 
-        List<TrainingEntity> trainings = traineeRepository.getTraineeTrainingsByCriteria(
+        List<TrainingEntity> trainings = traineeRepositoryCustom.getTraineeTrainingsByCriteria(
                 traineeUsername, fromDate, toDate, trainerName, trainingType);
 
         log.info(LogMessages.FOUND_TRAININGS_FOR_TRAINEE.getMessage(), transactionId, trainings.size(), traineeUsername);
@@ -119,7 +121,7 @@ public class TraineeService {
         String transactionId = ThreadContext.get("transactionId");
         log.debug(LogMessages.FETCHING_TRAINERS_NOT_ASSIGNED_TO_TRAINEE.getMessage(), transactionId, traineeUsername);
 
-        List<TrainerEntity> trainers = traineeRepository.getTrainersNotAssignedToTrainee(traineeUsername);
+        List<TrainerEntity> trainers = traineeRepositoryCustom.getTrainersNotAssignedToTrainee(traineeUsername);
         List<TrainerNestedDTO> trainerDTOs = trainers.stream().map(TrainerConverter::toNestedDTO).collect(Collectors.toList());
 
         log.info(LogMessages.FOUND_TRAINERS_NOT_ASSIGNED_TO_TRAINEE.getMessage(), transactionId, trainers.size(), traineeUsername);
@@ -130,7 +132,7 @@ public class TraineeService {
         String transactionId = ThreadContext.get("transactionId");
         log.debug(LogMessages.ATTEMPTING_TO_UPDATE_TRAINEE_TRAINERS.getMessage(), transactionId, traineeUsername);
 
-        TraineeEntity trainee = traineeRepository.getByUsername(traineeUsername)
+        TraineeEntity trainee = traineeRepositoryCustom.getByUsername(traineeUsername)
                 .orElseThrow(() -> new EntityNotFoundException(ExceptionMessages.TRAINEE_NOT_FOUND.format(traineeUsername)));
 
         List<TrainerEntity> trainerEntities = trainerUsernames.stream()
@@ -141,6 +143,6 @@ public class TraineeService {
         trainee.setTrainers(trainerEntities);
 
         log.info(LogMessages.TRAINEE_TRAINERS_UPDATED.getMessage(), transactionId, traineeUsername);
-        return traineeRepository.updateTrainers(trainee).getTrainers().stream().map(TrainerConverter::toNestedDTO).collect(Collectors.toList());
+        return traineeRepositoryCustom.updateTrainers(trainee).getTrainers().stream().map(TrainerConverter::toNestedDTO).collect(Collectors.toList());
     }
 }

@@ -31,7 +31,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         CachedBodyHttpServletRequest wrappedRequest = new CachedBodyHttpServletRequest(request);
 
         String path = wrappedRequest.getRequestURI();
-        if (path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs") || path.equals("/")) {
+        if (path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs") || path.equals("/") || path.startsWith("/actuator")) {
             filterChain.doFilter(wrappedRequest, response);
             return;
         }

@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 
-public interface TraineeDAO extends JpaRepository<TraineeEntity, Long>, TraineeRepositoryCustom {
+public interface TraineeDAO extends JpaRepository<TraineeEntity, Long>{
 }
