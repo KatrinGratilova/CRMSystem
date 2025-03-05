@@ -1,16 +1,16 @@
 package org.example.crmsystem.utils;
 
-import org.example.crmsystem.dao.interfaces.TraineeDAO;
+import org.example.crmsystem.dao.TraineeRepositoryImpl;
 import org.example.crmsystem.dao.interfaces.TrainerDAO;
 import org.example.crmsystem.dto.user.UserServiceDTO;
 import org.springframework.stereotype.Component;
 
 @Component
 public class UsernameGenerator {
-    TraineeDAO traineeDAO;
+    TraineeRepositoryImpl traineeDAO;
     TrainerDAO trainerDAO;
 
-    public UsernameGenerator(TraineeDAO traineeDAO, TrainerDAO trainerDAO) {
+    public UsernameGenerator(TraineeRepositoryImpl traineeDAO, TrainerDAO trainerDAO) {
         this.traineeDAO = traineeDAO;
         this.trainerDAO = trainerDAO;
     }

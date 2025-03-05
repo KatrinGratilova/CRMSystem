@@ -43,7 +43,7 @@ public class TraineeService {
         traineeDTO.setPassword(passwordGenerator.generateUserPassword());
         traineeDTO.setUsername(usernameGenerator.generateUsername(traineeDTO));
 
-        TraineeEntity addedTraineeEntity = traineeRepository.add(TraineeConverter.toEntity(traineeDTO));
+        TraineeEntity addedTraineeEntity = traineeRepository.save(TraineeConverter.toEntity(traineeDTO));
         authenticationService.authenticate(traineeDTO.getUsername(), traineeDTO.getPassword());
 
         log.info(LogMessages.ADDED_NEW_TRAINEE.getMessage(), transactionId, addedTraineeEntity.getUsername());
@@ -70,7 +70,7 @@ public class TraineeService {
 
         TraineeEntity updatedTraineeEntity = TraineeConverter.toEntity(traineeDTO);
         try {
-            updatedTraineeEntity = traineeRepository.update(updatedTraineeEntity);
+            updatedTraineeEntity = traineeRepository.updateMainInfo(updatedTraineeEntity);
         } catch (EntityNotFoundException e) {
             log.warn(LogMessages.TRAINEE_NOT_FOUND.getMessage(), transactionId, updatedTraineeEntity.getUsername());
             throw e;
