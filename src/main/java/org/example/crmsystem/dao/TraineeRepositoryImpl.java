@@ -54,7 +54,7 @@ public class TraineeRepositoryImpl implements TraineeRepositoryCustom {
 
     @Override
     @Transactional
-    public TraineeEntity updateMainInfo(TraineeEntity traineeModified) throws EntityNotFoundException {
+    public TraineeEntity update(TraineeEntity traineeModified) throws EntityNotFoundException {
         String transactionId = ThreadContext.get("transactionId");
         TraineeEntity trainee = null;
 

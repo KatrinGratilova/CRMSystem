@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface TraineeRepositoryCustom extends HavingUserName<TraineeEntity> {
     Optional<TraineeEntity> getById(long id);
 
-    TraineeEntity updateMainInfo(TraineeEntity traineeEntity) throws EntityNotFoundException;
+    TraineeEntity update(TraineeEntity traineeEntity) throws EntityNotFoundException;
 
     TraineeEntity updateTrainers(TraineeEntity traineeModified) throws EntityNotFoundException;
 
