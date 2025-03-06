@@ -1,7 +1,8 @@
-package org.example.crmsystem.health;
+package org.example.crmsystem.actuator;
 
 import lombok.RequiredArgsConstructor;
 import org.example.crmsystem.service.AuthenticationService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
@@ -13,17 +14,29 @@ public class TraineeApiPerformanceHealthIndicator implements HealthIndicator {
     private final RestTemplate restTemplate;
     private final AuthenticationService authenticationService;
 
+    @Value("${api.trainee.url}")
+    private String traineeApiUrl;
+
+    @Value("${api.trainee.health.username}")
+    private String healthUsername;
+
+    @Value("${api.trainee.health.password}")
+    private String healthPassword;
+
+    @Value("${api.trainee.threshold}")
+    private int responseTimeThreshold;
+
     @Override
     public Health health() {
         long start = System.currentTimeMillis();
         try {
-            authenticationService.authenticate("trainee.HealthUsername", "testPassword");
-            String apiUrl = "http://localhost:8080/trainees/trainee.HealthUsername";
+            authenticationService.authenticate(healthUsername, healthPassword);
+            String apiUrl = traineeApiUrl + healthUsername;
 
             restTemplate.getForObject(apiUrl, String.class);
             long duration = System.currentTimeMillis() - start;
 
-            if (duration > 1000) {
+            if (duration > responseTimeThreshold) {
                 return Health.down()
                         .withDetail("API response time", duration + "ms")
                         .withDetail("error", "Response time is too high")

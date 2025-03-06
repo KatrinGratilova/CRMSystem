@@ -1,25 +1,27 @@
-package org.example.crmsystem.health;
+package org.example.crmsystem.actuator;
 
 import lombok.RequiredArgsConstructor;
 import org.example.crmsystem.service.AuthenticationService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-
 @Component("authentication")
 @RequiredArgsConstructor
 public class AuthenticationHealthIndicator implements HealthIndicator {
-
     private final AuthenticationService authenticationService;
+
+    @Value("${api.trainee.health.username}")
+    private String healthUsername;
+
+    @Value("${api.trainee.health.password}")
+    private String healthPassword;
 
     @Override
     public Health health() {
-        String testUsername = "trainee.HealthUsername";
-        String testPassword = "testpassword";
-
         try {
-            boolean isAuthenticated = authenticationService.authenticate(testUsername, testPassword);
+            boolean isAuthenticated = authenticationService.authenticate(healthUsername, healthPassword);
 
             if (isAuthenticated) {
                 return Health.up().withDetail("Authentication", "Success for test user").build();
