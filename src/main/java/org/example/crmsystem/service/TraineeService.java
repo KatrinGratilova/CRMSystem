@@ -1,7 +1,8 @@
 package org.example.crmsystem.service;
 
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.ThreadContext;
 import org.example.crmsystem.converter.TraineeConverter;
@@ -29,7 +30,6 @@ import java.util.stream.Collectors;
 
 @Service
 @Log4j2
-@RequiredArgsConstructor
 public class TraineeService {
     private final TraineeDAO traineeRepository;
     private final TraineeRepositoryCustom traineeRepositoryCustom;
@@ -37,6 +37,23 @@ public class TraineeService {
     private final UsernameGenerator usernameGenerator;
     private final AuthenticationService authenticationService;
     private final TrainerService trainerService;
+
+    public TraineeService(TraineeDAO traineeRepository, TraineeRepositoryCustom traineeRepositoryCustom, PasswordGenerator passwordGenerator, UsernameGenerator usernameGenerator, AuthenticationService authenticationService, TrainerService trainerService, MeterRegistry meterRegistry) {
+        this.traineeRepository = traineeRepository;
+        this.traineeRepositoryCustom = traineeRepositoryCustom;
+        this.passwordGenerator = passwordGenerator;
+        this.usernameGenerator = usernameGenerator;
+        this.authenticationService = authenticationService;
+        this.trainerService = trainerService;
+
+        Gauge.builder("trainee.count", traineeRepository::count)
+                .description("The number of trainees")
+                .register(meterRegistry);
+
+        Gauge.builder("active.trainee.count", () -> traineeRepository.findByActive(true).size())
+                .description("The number of active trainees")
+                .register(meterRegistry);
+    }
 
     public TraineeServiceDTO createProfile(TraineeServiceDTO traineeDTO) {
         String transactionId = ThreadContext.get("transactionId");

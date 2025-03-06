@@ -1,6 +1,8 @@
 package org.example.crmsystem.service;
 
-import lombok.RequiredArgsConstructor;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.ThreadContext;
 import org.example.crmsystem.converter.TrainerConverter;
@@ -12,7 +14,6 @@ import org.example.crmsystem.dto.training.TrainingByTrainerDTO;
 import org.example.crmsystem.dto.user.UserUpdateStatusRequestDTO;
 import org.example.crmsystem.entity.TrainerEntity;
 import org.example.crmsystem.entity.TrainingEntity;
-import jakarta.persistence.EntityNotFoundException;
 import org.example.crmsystem.messages.ExceptionMessages;
 import org.example.crmsystem.messages.LogMessages;
 import org.example.crmsystem.utils.PasswordGenerator;
@@ -26,13 +27,28 @@ import java.util.stream.Collectors;
 
 @Service
 @Log4j2
-@RequiredArgsConstructor
 public class TrainerService {
     private final TrainerDAO trainerRepository;
     private final TrainerRepositoryCustom trainerRepositoryCustom;
     private final PasswordGenerator passwordGenerator;
     private final UsernameGenerator usernameGenerator;
     private final AuthenticationService authenticationService;
+
+    public TrainerService(TrainerDAO trainerRepository, TrainerRepositoryCustom trainerRepositoryCustom, PasswordGenerator passwordGenerator, UsernameGenerator usernameGenerator, AuthenticationService authenticationService, MeterRegistry meterRegistry) {
+        this.trainerRepository = trainerRepository;
+        this.trainerRepositoryCustom = trainerRepositoryCustom;
+        this.passwordGenerator = passwordGenerator;
+        this.usernameGenerator = usernameGenerator;
+        this.authenticationService = authenticationService;
+
+        Gauge.builder("trainer.count", trainerRepository::count)
+                .description("The number of trainers")
+                .register(meterRegistry);
+
+        Gauge.builder("active.trainer.count", () -> trainerRepository.findByActive(true).size())
+                .description("The number of active trainers")
+                .register(meterRegistry);
+    }
 
     public TrainerServiceDTO createProfile(TrainerServiceDTO trainerDTO) {
         String transactionId = ThreadContext.get("transactionId");
