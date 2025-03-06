@@ -4,6 +4,7 @@ import org.example.crmsystem.converter.TrainingConverter;
 import org.example.crmsystem.dao.interfaces.TrainingDAO;
 import org.example.crmsystem.dto.training.TrainingServiceDTO;
 import org.example.crmsystem.entity.*;
+import org.example.crmsystem.exception.IncompatibleSpecialization;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,8 +22,6 @@ import static org.mockito.Mockito.*;
 class TrainingServiceTest {
     @Mock
     private TrainingDAO trainingDAO;
-    @Mock
-    private TrainerService trainerService;
     @InjectMocks
     private TrainingService trainingService;
 
@@ -42,13 +41,13 @@ class TrainingServiceTest {
     }
 
     @Test
-    void testAddTraining_Successful() {
-        when(trainingDAO.add(trainingEntity)).thenReturn(trainingEntity);
+    void testAddTraining_Successful() throws IncompatibleSpecialization {
+        when(trainingDAO.create(trainingEntity)).thenReturn(trainingEntity);
 
-        TrainingServiceDTO addedTrainingDTO = trainingService.add(TrainingConverter.toServiceDTO(trainingEntity));
+        TrainingServiceDTO addedTrainingDTO = trainingService.create(TrainingConverter.toServiceDTO(trainingEntity));
 
         assertNotNull(addedTrainingDTO);
         assertEquals(1L, addedTrainingDTO.getId());
-        verify(trainingDAO, times(1)).add(trainingEntity);
+        verify(trainingDAO, times(1)).create(trainingEntity);
     }
 }

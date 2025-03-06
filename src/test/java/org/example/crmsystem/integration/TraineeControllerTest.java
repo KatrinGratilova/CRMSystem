@@ -69,7 +69,7 @@ class TraineeControllerTest {
                 .specialization(new TrainingTypeEntity(1, TrainingType.FITNESS))
                 .firstName("Andrew")
                 .lastName("Montgomery")
-                .userName("Andrew.Montgomery")
+                .username("Andrew.Montgomery")
                 .password("1234")
                 .isActive(true)
                 .trainings(new ArrayList<>())
@@ -79,7 +79,7 @@ class TraineeControllerTest {
                 .specialization(new TrainingTypeEntity(1, TrainingType.FITNESS))
                 .firstName("Ben")
                 .lastName("Smith")
-                .userName("Ben.Smith")
+                .username("Ben.Smith")
                 .password("1234")
                 .isActive(true)
                 .trainings(new ArrayList<>())
@@ -176,7 +176,7 @@ class TraineeControllerTest {
         trainerService.createProfile(trainerDTO2);
 
         trainingDTO.setTraineeUsername("Katya.Doe");
-        trainingDTO.setTrainerUsername(trainerDTO1.getUserName());
+        trainingDTO.setTrainerUsername(trainerDTO1.getUsername());
 
         mockMvc.perform(post("/trainings")
                 .contentType(MediaType.APPLICATION_JSON)

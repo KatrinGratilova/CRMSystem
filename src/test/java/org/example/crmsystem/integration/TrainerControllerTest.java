@@ -45,7 +45,7 @@ public class TrainerControllerTest {
     TraineeServiceDTO traineeDTO1 = TraineeServiceDTO.builder()
             .firstName("Andrew")
             .lastName("Montgomery")
-            .userName("Andrew.Montgomery")
+            .username("Andrew.Montgomery")
             .password("1234")
             .isActive(true)
             .trainings(new ArrayList<>())
