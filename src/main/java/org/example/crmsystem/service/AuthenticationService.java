@@ -9,7 +9,6 @@ import org.example.crmsystem.dao.interfaces.TrainerRepositoryCustom;
 import org.example.crmsystem.entity.TraineeEntity;
 import org.example.crmsystem.entity.TrainerEntity;
 import org.example.crmsystem.entity.UserEntity;
-import org.example.crmsystem.exception.UserIsNotAuthenticated;
 import org.example.crmsystem.messages.ExceptionMessages;
 import org.example.crmsystem.messages.LogMessages;
 import org.springframework.stereotype.Service;
@@ -56,7 +55,7 @@ public class AuthenticationService {
         return isAuthenticated;
     }
 
-    public boolean changePassword(String username, String oldPassword, String newPassword) throws EntityNotFoundException, UserIsNotAuthenticated {
+    public boolean changePassword(String username, String oldPassword, String newPassword) throws EntityNotFoundException {
         String transactionId = ThreadContext.get("transactionId");
 
         if (isAuthenticated(username)) {
