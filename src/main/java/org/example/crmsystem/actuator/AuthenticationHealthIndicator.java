@@ -7,7 +7,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-@Component("authentication")
+@Component
 @RequiredArgsConstructor
 public class AuthenticationHealthIndicator implements HealthIndicator {
     private final AuthenticationService authenticationService;
