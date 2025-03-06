@@ -53,8 +53,6 @@ public class TrainerController {
     })
     public ResponseEntity<TrainerGetResponseDTO> getTrainer(@PathVariable String username) throws EntityNotFoundException {
         TrainerServiceDTO trainerDTO = trainerService.getByUsername(username);
-        System.out.println(trainerDTO);
-        System.out.println(TrainerConverter.toGetResponseDTO(trainerDTO));
         return new ResponseEntity<>(TrainerConverter.toGetResponseDTO(trainerDTO), HttpStatus.FOUND);
     }
 
