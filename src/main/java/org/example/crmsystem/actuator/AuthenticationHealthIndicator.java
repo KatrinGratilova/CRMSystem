@@ -5,10 +5,12 @@ import org.example.crmsystem.service.AuthenticationService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Profile({"local", "prod"})
 public class AuthenticationHealthIndicator implements HealthIndicator {
     private final AuthenticationService authenticationService;
 
