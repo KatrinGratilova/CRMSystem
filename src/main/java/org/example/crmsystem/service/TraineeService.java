@@ -89,7 +89,7 @@ public class TraineeService {
 
         TraineeEntity updatedTraineeEntity = TraineeConverter.toEntity(traineeDTO);
         try {
-            updatedTraineeEntity = traineeRepositoryCustom.updateMainInfo(updatedTraineeEntity);
+            updatedTraineeEntity = traineeRepositoryCustom.update(updatedTraineeEntity);
         } catch (EntityNotFoundException e) {
             log.warn(LogMessages.TRAINEE_NOT_FOUND.getMessage(), transactionId, updatedTraineeEntity.getUsername());
             throw e;
