@@ -25,7 +25,7 @@ public class TraineeEntity extends UserEntity {
     @Column
     private String address;
 
-    @OneToMany(mappedBy = "trainee", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "trainee", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<TrainingEntity> trainings = new ArrayList<>();
 
     @ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)

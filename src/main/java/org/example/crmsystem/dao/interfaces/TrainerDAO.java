@@ -1,24 +1,12 @@
 package org.example.crmsystem.dao.interfaces;
 
 import org.example.crmsystem.entity.TrainerEntity;
-import org.example.crmsystem.entity.TrainingEntity;
-import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
-public interface TrainerDAO extends HavingUserName<TrainerEntity> {
-    TrainerEntity add(TrainerEntity trainerEntity);
-
-    Optional<TrainerEntity> getById(long id);
-
-    TrainerEntity update(TrainerEntity trainerEntity) throws EntityNotFoundException;
-
-    void updatePassword(TrainerEntity trainerEntity) throws EntityNotFoundException;
-
-    boolean toggleActiveStatus(String username, boolean isActive) throws EntityNotFoundException;
-
-    List<TrainingEntity> getTrainerTrainingsByCriteria(
-            String trainerUserName, LocalDateTime fromDate, LocalDateTime toDate, String traineeName);
+public interface TrainerDAO extends JpaRepository<TrainerEntity, Long> {
+    @Query("SELECT t FROM TrainerEntity t WHERE t.isActive = :active")
+    List<TrainerEntity> findByActive(boolean active);
 }

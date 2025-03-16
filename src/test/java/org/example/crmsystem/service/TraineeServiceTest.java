@@ -1,8 +1,10 @@
 package org.example.crmsystem.service;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.persistence.EntityNotFoundException;
 import org.example.crmsystem.converter.TraineeConverter;
 import org.example.crmsystem.dao.interfaces.TraineeDAO;
+import org.example.crmsystem.dao.interfaces.TraineeRepositoryCustom;
 import org.example.crmsystem.dto.trainee.TraineeServiceDTO;
 import org.example.crmsystem.dto.trainer.TrainerNestedDTO;
 import org.example.crmsystem.dto.trainer.TrainerServiceDTO;
@@ -36,6 +38,8 @@ class TraineeServiceTest {
     @Mock
     private TraineeDAO traineeDAO;
     @Mock
+    private TraineeRepositoryCustom repositoryCustom;
+    @Mock
     private TrainerService trainerService;
     @Mock
     private PasswordGenerator passwordGenerator;
@@ -43,6 +47,8 @@ class TraineeServiceTest {
     private UsernameGenerator usernameGenerator;
     @Mock
     private AuthenticationService authenticationService;
+    @Mock
+    private MeterRegistry meterRegistry;
 
     @InjectMocks
     private TraineeService traineeService;
@@ -59,7 +65,7 @@ class TraineeServiceTest {
                 .address("Odesa, st. Bunina")
                 .firstName("Andrew")
                 .lastName("Montgomery")
-                .userName("Andrew.Montgomery")
+                .username("Andrew.Montgomery")
                 .password("1234")
                 .isActive(true)
                 .trainings(new ArrayList<>())
@@ -74,73 +80,73 @@ class TraineeServiceTest {
         String generatedPassword = "password123";
         String generatedUsername = "Andrew.Montgomery";
 
-        traineeEntity.setUserName(generatedUsername);
+        traineeEntity.setUsername(generatedUsername);
         traineeEntity.setPassword(generatedPassword);
 
         when(passwordGenerator.generateUserPassword()).thenReturn(generatedPassword);
-        when(usernameGenerator.generateUserName(traineeDTO)).thenReturn(generatedUsername);
+        when(usernameGenerator.generateUsername(traineeDTO)).thenReturn(generatedUsername);
         when(authenticationService.authenticate(generatedUsername, generatedPassword)).thenReturn(true);
 
-        when(traineeDAO.add(any(TraineeEntity.class))).thenReturn(traineeEntity);
+        when(traineeDAO.save(any(TraineeEntity.class))).thenReturn(traineeEntity);
 
         TraineeServiceDTO result = traineeService.createProfile(traineeDTO);
 
         assertNotNull(result);
         assertEquals(traineeEntity.getPassword(), result.getPassword());
-        assertEquals(traineeEntity.getUserName(), result.getUserName());
+        assertEquals(traineeEntity.getUsername(), result.getUsername());
 
-        verify(traineeDAO, times(1)).add(traineeEntity);
+        verify(traineeDAO, times(1)).save(traineeEntity);
         verify(passwordGenerator, times(1)).generateUserPassword();
-        verify(usernameGenerator, times(1)).generateUserName(traineeDTO);
+        verify(usernameGenerator, times(1)).generateUsername(traineeDTO);
         verify(authenticationService, times(1)).authenticate(generatedUsername, generatedPassword);
     }
 
     @Test
-    void testGetByUserName_TraineeFound_Successful() throws EntityNotFoundException {
+    void testGetByUsername_TraineeFound_Successful() throws EntityNotFoundException {
         String userName = "Andrew.Montgomery";
-        traineeEntity.setUserName(userName);
-        when(traineeDAO.getByUserName(userName)).thenReturn(Optional.of(traineeEntity));
+        traineeEntity.setUsername(userName);
+        when(repositoryCustom.getByUsername(userName)).thenReturn(Optional.of(traineeEntity));
 
         TraineeServiceDTO result = traineeService.getByUsername(userName);
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
-        assertEquals(userName, result.getUserName());
-        verify(traineeDAO, times(1)).getByUserName(userName);
+        assertEquals(userName, result.getUsername());
+        verify(repositoryCustom, times(1)).getByUsername(userName);
     }
 
     @Test
-    void testGetByByUserName_TraineeNotFound_ThrowsEntityNotFoundException() {
+    void testGetByByUsername_TraineeNotFound_ThrowsEntityNotFoundException() {
         String userName = "Andrew.Montgomery";
-        when(traineeDAO.getByUserName(userName)).thenReturn(Optional.empty());
+        when(repositoryCustom.getByUsername(userName)).thenReturn(Optional.empty());
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
                 () -> traineeService.getByUsername(userName));
 
-        assertEquals(ExceptionMessages.TRAINEE_NOT_FOUND_BY_USERNAME.format(userName), exception.getMessage());
-        verify(traineeDAO, times(1)).getByUserName(userName);
+        assertEquals(ExceptionMessages.TRAINEE_NOT_FOUND.format(userName), exception.getMessage());
+        verify(repositoryCustom, times(1)).getByUsername(userName);
     }
 
     @Test
     void testUpdate_TraineeFound_Successful() throws EntityNotFoundException {
-        when(traineeDAO.update(traineeEntity)).thenReturn(traineeEntity);
+        when(repositoryCustom.update(traineeEntity)).thenReturn(traineeEntity);
 
         TraineeServiceDTO result = traineeService.update(traineeDTO);
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
-        verify(traineeDAO, times(1)).update(traineeEntity);
+        verify(repositoryCustom, times(1)).update(traineeEntity);
     }
 
     @Test
     void testUpdate_TraineeNotFound_ThrowsEntityNotFoundException() throws EntityNotFoundException {
-        when(traineeDAO.update(traineeEntity)).thenThrow(new EntityNotFoundException(ExceptionMessages.TRAINEE_NOT_FOUND.format(1L)));
+        when(repositoryCustom.update(traineeEntity)).thenThrow(new EntityNotFoundException(ExceptionMessages.TRAINEE_NOT_FOUND.format(1L)));
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
                 () -> traineeService.update(traineeDTO));
 
         assertEquals(ExceptionMessages.TRAINEE_NOT_FOUND.format(1L), exception.getMessage());
-        verify(traineeDAO, times(1)).update(traineeEntity);
+        verify(repositoryCustom, times(1)).update(traineeEntity);
     }
 
     @Test
@@ -149,28 +155,28 @@ class TraineeServiceTest {
 
         traineeService.deleteByUsername(userName);
 
-        verify(traineeDAO, times(1)).deleteByUserName(userName);
+        verify(repositoryCustom, times(1)).deleteByUsername(userName);
     }
 
     @Test
     void testToggleActiveStatus_TraineeFound_Successful() throws EntityNotFoundException {
-        when(traineeDAO.toggleActiveStatus(username, true)).thenReturn(true);
+        when(repositoryCustom.toggleActiveStatus(username, true)).thenReturn(true);
 
         boolean result = traineeService.toggleActiveStatus(username, new UserUpdateStatusRequestDTO(true));
 
         assertTrue(result);
-        verify(traineeDAO, times(1)).toggleActiveStatus(username, true);
+        verify(repositoryCustom, times(1)).toggleActiveStatus(username, true);
     }
 
     @Test
     void testToggleActiveStatus_TraineeNotFound_ThrowsEntityNotFoundException() throws EntityNotFoundException {
-        when(traineeDAO.toggleActiveStatus(username, true)).thenThrow(new EntityNotFoundException(ExceptionMessages.TRAINEE_NOT_FOUND.format(1L)));
+        when(repositoryCustom.toggleActiveStatus(username, true)).thenThrow(new EntityNotFoundException(ExceptionMessages.TRAINEE_NOT_FOUND.format(1L)));
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
                 () -> traineeService.toggleActiveStatus(username, new UserUpdateStatusRequestDTO(true)));
 
         assertEquals(ExceptionMessages.TRAINEE_NOT_FOUND.format(1L), exception.getMessage());
-        verify(traineeDAO, times(1)).toggleActiveStatus(username, true);
+        verify(repositoryCustom, times(1)).toggleActiveStatus(username, true);
     }
 
     @Test
@@ -183,51 +189,51 @@ class TraineeServiceTest {
                 TrainingEntity.builder()
                         .trainer(new TrainerEntity())
                         .trainee(TraineeEntity.builder()
-                                .userName(userName)
+                                .username(userName)
                                 .build())
                         .build(),
                 TrainingEntity.builder()
                         .trainer(new TrainerEntity())
                         .trainee(TraineeEntity.builder()
-                                .userName(userName)
+                                .username(userName)
                                 .build())
                         .build());
 
-        when(traineeDAO.getTraineeTrainingsByCriteria(userName, fromDate, toDate, "trainer", "type"))
+        when(repositoryCustom.getTraineeTrainingsByCriteria(userName, fromDate, toDate, "trainer", "type"))
                 .thenReturn(trainings);
 
         List<TrainingByTraineeDTO> result = traineeService.getTraineeTrainingsByCriteria(userName, fromDate, toDate, "trainer", "type");
 
         assertEquals(2, result.size());
-        verify(traineeDAO, times(1)).getTraineeTrainingsByCriteria(userName, fromDate, toDate, "trainer", "type");
+        verify(repositoryCustom, times(1)).getTraineeTrainingsByCriteria(userName, fromDate, toDate, "trainer", "type");
     }
 
     @Test
     void testGetTrainersNotAssignedToTrainee_Successful() {
         List<TrainerEntity> trainings = List.of(new TrainerEntity(), new TrainerEntity());
 
-        when(traineeDAO.getTrainersNotAssignedToTrainee(username)).thenReturn(trainings);
+        when(repositoryCustom.getTrainersNotAssignedToTrainee(username)).thenReturn(trainings);
 
         List<TrainerNestedDTO> result = traineeService.getTrainersNotAssignedToTrainee(username);
 
         assertEquals(2, result.size());
-        verify(traineeDAO, times(1)).getTrainersNotAssignedToTrainee(username);
+        verify(repositoryCustom, times(1)).getTrainersNotAssignedToTrainee(username);
     }
 
     @Test
     void testUpdateTraineeTrainers_Successful() {
-        when(traineeDAO.getByUserName(username)).thenReturn(Optional.of(traineeEntity));
+        when(repositoryCustom.getByUsername(username)).thenReturn(Optional.of(traineeEntity));
         when(trainerService.getByUsername("trainer1")).thenReturn(new TrainerServiceDTO());
         when(trainerService.getByUsername("trainer2")).thenReturn(new TrainerServiceDTO());
 
         traineeEntity.setTrainers(new ArrayList<>());
-        when(traineeDAO.updateTrainers(traineeEntity)).thenReturn(traineeEntity);
+        when(repositoryCustom.updateTrainers(traineeEntity)).thenReturn(traineeEntity);
 
         List<TrainerNestedDTO> result = traineeService.updateTraineeTrainers(username, List.of("trainer1", "trainer2"));
 
         assertEquals(2, result.size());
-        verify(traineeDAO, times(1)).getByUserName(username);
+        verify(repositoryCustom, times(1)).getByUsername(username);
         verify(trainerService, times(2)).getByUsername(anyString());
-        verify(traineeDAO, times(1)).updateTrainers(traineeEntity);
+        verify(repositoryCustom, times(1)).updateTrainers(traineeEntity);
     }
 }

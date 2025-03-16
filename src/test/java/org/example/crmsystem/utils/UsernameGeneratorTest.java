@@ -2,8 +2,7 @@ package org.example.crmsystem.utils;
 
 import org.example.crmsystem.converter.TraineeConverter;
 import org.example.crmsystem.converter.TrainerConverter;
-import org.example.crmsystem.dao.interfaces.TraineeDAO;
-import org.example.crmsystem.dao.interfaces.TrainerDAO;
+import org.example.crmsystem.dao.interfaces.TraineeRepositoryCustom;
 import org.example.crmsystem.entity.TraineeEntity;
 import org.example.crmsystem.entity.TrainerEntity;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -24,10 +24,10 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UsernameGeneratorTest {
     @Mock
-    private TraineeDAO traineeDAO;
+    private TraineeRepositoryCustom traineeDAO;
 
     @Mock
-    private TrainerDAO trainerDAO;
+    private TraineeRepositoryCustom trainerDAO;
 
     @InjectMocks
     private UsernameGenerator usernameGenerator;
@@ -43,14 +43,14 @@ class UsernameGeneratorTest {
         user.setFirstName("John");
         user.setLastName("Doe");
 
-        when(traineeDAO.getWhereUserNameStartsWith("John.Doe")).thenReturn(Collections.emptyList());
-        when(trainerDAO.getWhereUserNameStartsWith("John.Doe")).thenReturn(Collections.emptyList());
+        when(traineeDAO.getWhereUsernameStartsWith("John.Doe")).thenReturn(Collections.emptyList());
+        when(trainerDAO.getWhereUsernameStartsWith("John.Doe")).thenReturn(Collections.emptyList());
 
-        String generatedUsername = usernameGenerator.generateUserName(TrainerConverter.toServiceDTO(user));
+        String generatedUsername = usernameGenerator.generateUsername(TrainerConverter.toServiceDTO(user));
 
         assertEquals("John.Doe", generatedUsername);
-        verify(traineeDAO).getWhereUserNameStartsWith("John.Doe");
-        verify(trainerDAO).getWhereUserNameStartsWith("John.Doe");
+        verify(traineeDAO).getWhereUsernameStartsWith("John.Doe");
+        verify(trainerDAO).getWhereUsernameStartsWith("John.Doe");
     }
 
     @Test
@@ -59,19 +59,16 @@ class UsernameGeneratorTest {
         user.setFirstName("Jane");
         user.setLastName("Smith");
 
-        when(traineeDAO.getWhereUserNameStartsWith("Jane.Smith")).thenReturn(List.of(TraineeEntity
+        when(traineeDAO.getWhereUsernameStartsWith("Jane.Smith")).thenReturn(List.of(TraineeEntity
                 .builder()
-                .userName("Jane.Smith")
+                .username("Jane.Smith")
                 .build()));
-        when(trainerDAO.getWhereUserNameStartsWith("Jane.Smith")).thenReturn(List.of(TrainerEntity
-                .builder()
-                .userName("Jane.Smith1")
-                .build()));
+        when(trainerDAO.getWhereUsernameStartsWith("Jane.Smith")).thenReturn(new ArrayList<>());
 
-        String generatedUsername = usernameGenerator.generateUserName(TraineeConverter.toServiceDTO(user));
+        String generatedUsername = usernameGenerator.generateUsername(TraineeConverter.toServiceDTO(user));
 
-        assertEquals("Jane.Smith2", generatedUsername);
-        verify(traineeDAO).getWhereUserNameStartsWith("Jane.Smith");
-        verify(trainerDAO).getWhereUserNameStartsWith("Jane.Smith");
+        assertEquals("Jane.Smith1", generatedUsername);
+        verify(traineeDAO).getWhereUsernameStartsWith("Jane.Smith");
+        verify(trainerDAO).getWhereUsernameStartsWith("Jane.Smith");
     }
 }
