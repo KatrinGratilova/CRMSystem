@@ -9,7 +9,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.example.crmsystem.security.JwtTokenUtil;
+import org.example.crmsystem.security.jwt.JwtTokenUtil;
 import org.example.crmsystem.converter.TraineeConverter;
 import org.example.crmsystem.dto.trainee.TraineeServiceDTO;
 import org.example.crmsystem.dto.trainee.request.TraineeRegistrationRequestDTO;
@@ -73,11 +73,17 @@ public class TraineeController {
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
     public ResponseEntity<TraineeGetResponseDTO> getTrainee(@PathVariable("username") String username) throws EntityNotFoundException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        if (!currentUsername.equals(username))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         TraineeServiceDTO traineeDTO = traineeService.getByUsername(username);
         return new ResponseEntity<>(TraineeConverter.toGetResponseDTO(traineeDTO), HttpStatus.FOUND);
     }
 
-    @PutMapping
+    @PutMapping("/{username}")
     @Operation(summary = "Update trainee", description = "Updates trainee information")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully updated trainee"),
@@ -85,7 +91,14 @@ public class TraineeController {
             @ApiResponse(responseCode = "404", description = "Trainee not found"),
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
-    public ResponseEntity<TraineeUpdateResponseDTO> updateTrainee(@Valid @RequestBody TraineeUpdateRequestDTO trainee) throws EntityNotFoundException {
+    public ResponseEntity<TraineeUpdateResponseDTO> updateTrainee(@PathVariable("username") String username, @Valid @RequestBody TraineeUpdateRequestDTO trainee) throws EntityNotFoundException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        if (!currentUsername.equals(username))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
+        trainee.setUsername(username);
         TraineeServiceDTO traineeDTO = traineeService.update(TraineeConverter.toServiceDTO(trainee));
         return new ResponseEntity<>(TraineeConverter.toUpdateResponseDTO(traineeDTO), HttpStatus.OK);
     }
@@ -99,6 +112,12 @@ public class TraineeController {
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
     public ResponseEntity<HttpStatus> deleteTrainee(@PathVariable("username") String username) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        if (!currentUsername.equals(username))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         traineeService.deleteByUsername(username);
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -112,6 +131,12 @@ public class TraineeController {
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
     public ResponseEntity<List<TrainerNestedDTO>> getTrainersNotAssignedToTrainee(@PathVariable("username") String username) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        if (!currentUsername.equals(username))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         List<TrainerNestedDTO> trainers = traineeService.getTrainersNotAssignedToTrainee(username);
         return new ResponseEntity<>(trainers, HttpStatus.OK);
     }
@@ -127,6 +152,12 @@ public class TraineeController {
     public ResponseEntity<List<TrainerNestedDTO>> updateTraineeTrainers(
             @PathVariable("username") String username,
             @NotNull @RequestBody List<String> trainerUsernames) throws EntityNotFoundException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        if (!currentUsername.equals(username))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         List<TrainerNestedDTO> updatedTrainers = traineeService.updateTraineeTrainers(username, trainerUsernames);
         return new ResponseEntity<>(updatedTrainers, HttpStatus.OK);
     }
@@ -146,6 +177,12 @@ public class TraineeController {
             @RequestParam(required = false) String trainerUsername,
             @RequestParam(required = false) String trainingType
     ) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        if (!currentUsername.equals(username))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         List<TrainingByTraineeDTO> trainings = traineeService.getTraineeTrainingsByCriteria(username, fromDate, toDate, trainerUsername, trainingType);
         return new ResponseEntity<>(trainings, HttpStatus.OK);
     }
@@ -159,6 +196,12 @@ public class TraineeController {
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
     public ResponseEntity<HttpStatus> toggleActiveStatus(@PathVariable String username, @Valid @RequestBody UserUpdateStatusRequestDTO request) throws EntityNotFoundException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        if (!currentUsername.equals(username))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         traineeService.toggleActiveStatus(username, request);
         return new ResponseEntity<>(HttpStatus.OK);
     }

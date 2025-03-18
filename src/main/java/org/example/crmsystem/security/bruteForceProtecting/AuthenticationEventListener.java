@@ -1,4 +1,4 @@
-package org.example.crmsystem.security;
+package org.example.crmsystem.security.bruteForceProtecting;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class AuthenticationEventListener {
-    private final org.example.crmsystem.security.LoginAttemptService loginAttemptService;
+    private final LoginAttemptService loginAttemptService;
 
     @EventListener
     public void onAuthenticationFailure(AuthenticationFailureBadCredentialsEvent event) {

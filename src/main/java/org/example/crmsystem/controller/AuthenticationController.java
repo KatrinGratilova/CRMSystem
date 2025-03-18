@@ -5,47 +5,73 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.example.crmsystem.dao.interfaces.RefreshTokenRepository;
 import org.example.crmsystem.dto.user.UserChangeLoginRequestDTO;
 import org.example.crmsystem.dto.user.UserCredentialsDTO;
-import org.example.crmsystem.security.JwtResponse;
-import org.example.crmsystem.security.JwtTokenUtil;
+import org.example.crmsystem.entity.RefreshToken;
+import org.example.crmsystem.security.jwt.JwtResponse;
+import org.example.crmsystem.security.jwt.JwtTokenUtil;
 import org.example.crmsystem.service.AuthenticationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/log")
 @Tag(name = "Authentication Controller", description = "Operations related to user authentication")
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
     private final AuthenticationManager authenticationManager;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final JwtTokenUtil jwtTokenUtil;
 
-    @GetMapping("/login")
+    @PostMapping("/login")
     @Operation(summary = "Login user by credentials", description = "Logins user by credentials")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully authenticated user"),
             @ApiResponse(responseCode = "404", description = "User not found"),
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
-    public ResponseEntity<?> createAuthenticationToken(@RequestBody UserCredentialsDTO loginRequest) {
+    public ResponseEntity<?> login(@RequestBody UserCredentialsDTO loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
         );
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        final String jwt = jwtTokenUtil.generateToken((UserDetails) authentication.getPrincipal());
+//        SecurityContextHolder.getContext().setAuthentication(authentication);
+//        final String jwt = jwtTokenUtil.generateToken((UserDetails) authentication.getPrincipal());
+//
+//        return ResponseEntity.ok(new JwtResponse(jwt));
 
-        return ResponseEntity.ok(new JwtResponse(jwt));
+        final String accessToken = jwtTokenUtil.generateToken((UserDetails) authentication.getPrincipal());
+        final String refreshToken = jwtTokenUtil.generateRefreshToken((UserDetails) authentication.getPrincipal());
+
+        RefreshToken refresh = new RefreshToken();
+        refresh.setToken(accessToken);
+        refresh.setUsername(loginRequest.getUsername());
+        refresh.setCreatedAt(LocalDateTime.now());
+        refresh.setExpiresAt(LocalDateTime.now().plusSeconds(10000000));
+
+        refreshTokenRepository.save(refresh);
+        JwtResponse jwtResponse = new JwtResponse(accessToken, refreshToken);
+
+        return ResponseEntity.ok(jwtResponse);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Boolean> logout(HttpServletRequest request,
+                                                       HttpServletResponse response) throws IOException {
+        System.out.println(1);
+        return authenticationService.logout(request, response);
     }
 
     @PutMapping("/change-password")

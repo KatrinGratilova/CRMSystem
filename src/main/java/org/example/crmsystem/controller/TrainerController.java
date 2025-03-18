@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.crmsystem.security.JwtTokenUtil;
+import org.example.crmsystem.security.jwt.JwtTokenUtil;
 import org.example.crmsystem.converter.TrainerConverter;
 import org.example.crmsystem.dto.trainer.TrainerServiceDTO;
 import org.example.crmsystem.dto.trainer.request.TrainerRegistrationRequestDTO;
@@ -70,11 +70,17 @@ public class TrainerController {
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
     public ResponseEntity<TrainerGetResponseDTO> getTrainer(@PathVariable String username) throws EntityNotFoundException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        if (!currentUsername.equals(username))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         TrainerServiceDTO trainerDTO = trainerService.getByUsername(username);
         return new ResponseEntity<>(TrainerConverter.toGetResponseDTO(trainerDTO), HttpStatus.FOUND);
     }
 
-    @PutMapping
+    @PutMapping("/{username}")
     @Operation(summary = "Update trainer", description = "Updates trainer information")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully updated trainer"),
@@ -82,7 +88,13 @@ public class TrainerController {
             @ApiResponse(responseCode = "404", description = "Trainer not found"),
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
-    public ResponseEntity<TrainerUpdateResponseDTO> updateTrainer(@Valid @RequestBody TrainerUpdateRequestDTO trainer) throws EntityNotFoundException {
+    public ResponseEntity<TrainerUpdateResponseDTO> updateTrainer(@PathVariable("username") String username, @Valid @RequestBody TrainerUpdateRequestDTO trainer) throws EntityNotFoundException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        if (!currentUsername.equals(username))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         TrainerServiceDTO trainerDTO = trainerService.update(TrainerConverter.toServiceDTO(trainer));
         return new ResponseEntity<>(TrainerConverter.toUpdateResponseDTO(trainerDTO), HttpStatus.OK);
     }
@@ -96,6 +108,12 @@ public class TrainerController {
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
     public ResponseEntity<HttpStatus> toggleActiveStatus(@PathVariable String username, @Valid @RequestBody UserUpdateStatusRequestDTO request) throws EntityNotFoundException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        if (!currentUsername.equals(username))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         trainerService.toggleActiveStatus(username, request);
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -114,6 +132,12 @@ public class TrainerController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate,
             @RequestParam(required = false) String traineeName
     ) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        if (!currentUsername.equals(username))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         List<TrainingByTrainerDTO> trainings = trainerService.getTrainerTrainingsByCriteria(username, fromDate, toDate, traineeName);
         return new ResponseEntity<>(trainings, HttpStatus.OK);
     }

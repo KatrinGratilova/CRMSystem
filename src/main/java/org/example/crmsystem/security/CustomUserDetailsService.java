@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.crmsystem.dao.interfaces.TraineeRepositoryCustom;
 import org.example.crmsystem.dao.interfaces.TrainerRepositoryCustom;
 import org.example.crmsystem.entity.UserEntity;
+import org.example.crmsystem.security.bruteForceProtecting.LoginAttemptService;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Service;
 public class CustomUserDetailsService implements UserDetailsService {
     private final TraineeRepositoryCustom traineeRepository;
     private final TrainerRepositoryCustom trainerRepository;
-    private final org.example.crmsystem.security.LoginAttemptService loginAttemptService;
+    private final LoginAttemptService loginAttemptService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

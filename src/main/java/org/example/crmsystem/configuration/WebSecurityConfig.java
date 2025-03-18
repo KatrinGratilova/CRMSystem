@@ -1,7 +1,7 @@
 package org.example.crmsystem.configuration;
 
 import lombok.RequiredArgsConstructor;
-import org.example.crmsystem.security.JwtRequestFilter;
+import org.example.crmsystem.security.jwt.JwtRequestFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,6 +15,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -24,24 +26,22 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebSecurityConfig implements WebMvcConfigurer {
     private final UserDetailsService userDetailsService;
     private final JwtRequestFilter jwtRequestFilter;
+    SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+    SimpleUrlLogoutSuccessHandler logoutSuccessHandler = new SimpleUrlLogoutSuccessHandler();
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/logout", "/trainers", "/trainees").permitAll()
+                        .requestMatchers("/log/login", "/log/logout", "/trainers", "/trainees").permitAll()
                         .anyRequest().authenticated()
                 )
                 .logout(logout -> logout
-                        .logoutUrl("/logout")
-                        .logoutSuccessHandler((request, response, authentication) -> {
-                            response.setStatus(200);
-                        })
-                        .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID")
-                        .permitAll()
-                );
+                        .logoutUrl("/log/logout") // Specifies the URL endpoint for logging out, so users will log out by accessing "/logout"
+//                        .addLogoutHandler(logoutHandler) // Adds a custom logout handler (logoutHandler) to handle the logout process
+//                        .logoutSuccessHandler(logoutSuccessHandler) // Specifies what to do after a successful logout, using a custom success handler
+                        .permitAll());// Allows all users to access the logout endpoint without authentication
 
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 

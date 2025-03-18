@@ -1,4 +1,4 @@
-package org.example.crmsystem.security;
+package org.example.crmsystem.security.bruteForceProtecting;
 
 import org.springframework.stereotype.Service;
 

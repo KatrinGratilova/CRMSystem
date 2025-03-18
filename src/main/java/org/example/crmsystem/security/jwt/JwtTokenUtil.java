@@ -1,4 +1,4 @@
-package org.example.crmsystem.security;
+package org.example.crmsystem.security.jwt;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -45,5 +45,17 @@ public class JwtTokenUtil {
                 .parseClaimsJws(token)
                 .getBody()
                 .getExpiration();
+    }
+
+    public String generateRefreshToken(UserDetails userDetails) {
+        Date now = new Date();
+        Date validity = new Date(now.getTime() + EXPIRATION_TIME_MILLIS * 1000); // Долгий срок действия
+
+        return Jwts.builder()
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(now)
+                .setExpiration(validity)
+                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .compact();
     }
 }
