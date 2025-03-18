@@ -33,7 +33,6 @@ public class TrainerService {
     private final TrainerRepositoryCustom trainerRepositoryCustom;
     private final PasswordGenerator passwordGenerator;
     private final UsernameGenerator usernameGenerator;
-    private final AuthenticationService authenticationService;
     private final PasswordEncoder passwordEncoder;
 
     public TrainerService(TrainerDAO trainerRepository, TrainerRepositoryCustom trainerRepositoryCustom, PasswordGenerator passwordGenerator, UsernameGenerator usernameGenerator, AuthenticationService authenticationService, MeterRegistry meterRegistry, PasswordEncoder passwordEncoder) {
@@ -41,7 +40,6 @@ public class TrainerService {
         this.trainerRepositoryCustom = trainerRepositoryCustom;
         this.passwordGenerator = passwordGenerator;
         this.usernameGenerator = usernameGenerator;
-        this.authenticationService = authenticationService;
         this.passwordEncoder = passwordEncoder;
 
         Gauge.builder("trainer.count", trainerRepository::count)
