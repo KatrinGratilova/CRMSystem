@@ -21,6 +21,7 @@ import org.example.crmsystem.messages.ExceptionMessages;
 import org.example.crmsystem.messages.LogMessages;
 import org.example.crmsystem.utils.PasswordGenerator;
 import org.example.crmsystem.utils.UsernameGenerator;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -37,14 +38,16 @@ public class TraineeService {
     private final UsernameGenerator usernameGenerator;
     private final AuthenticationService authenticationService;
     private final TrainerService trainerService;
+    private final PasswordEncoder passwordEncoder;
 
-    public TraineeService(TraineeDAO traineeRepository, TraineeRepositoryCustom traineeRepositoryCustom, PasswordGenerator passwordGenerator, UsernameGenerator usernameGenerator, AuthenticationService authenticationService, TrainerService trainerService, MeterRegistry meterRegistry) {
+    public TraineeService(TraineeDAO traineeRepository, TraineeRepositoryCustom traineeRepositoryCustom, PasswordGenerator passwordGenerator, UsernameGenerator usernameGenerator, AuthenticationService authenticationService, TrainerService trainerService, MeterRegistry meterRegistry, PasswordEncoder passwordEncoder) {
         this.traineeRepository = traineeRepository;
         this.traineeRepositoryCustom = traineeRepositoryCustom;
         this.passwordGenerator = passwordGenerator;
         this.usernameGenerator = usernameGenerator;
         this.authenticationService = authenticationService;
         this.trainerService = trainerService;
+        this.passwordEncoder = passwordEncoder;
 
         Gauge.builder("trainee.count", traineeRepository::count)
                 .description("The number of trainees")
@@ -59,14 +62,20 @@ public class TraineeService {
         String transactionId = ThreadContext.get("transactionId");
         log.debug(LogMessages.ATTEMPTING_TO_ADD_NEW_TRAINEE.getMessage(), transactionId, traineeDTO.getFirstName());
 
-        traineeDTO.setPassword(passwordGenerator.generateUserPassword());
+        String password = passwordGenerator.generateUserPassword();
         traineeDTO.setUsername(usernameGenerator.generateUsername(traineeDTO));
+        traineeDTO.setPassword(passwordEncoder.encode(password));
+        traineeDTO.setActive(true);
 
         TraineeEntity addedTraineeEntity = traineeRepository.save(TraineeConverter.toEntity(traineeDTO));
-        authenticationService.authenticate(traineeDTO.getUsername(), traineeDTO.getPassword());
 
-        log.info(LogMessages.ADDED_NEW_TRAINEE.getMessage(), transactionId, addedTraineeEntity.getUsername());
-        return TraineeConverter.toServiceDTO(addedTraineeEntity);
+        TraineeServiceDTO resultDTO = TraineeConverter.toServiceDTO(addedTraineeEntity);
+
+        resultDTO.setPassword(password);
+
+        log.info(LogMessages.ADDED_NEW_TRAINEE.getMessage(), transactionId, resultDTO.getUsername());
+
+        return resultDTO;
     }
 
     public TraineeServiceDTO getByUsername(String username) throws EntityNotFoundException {
