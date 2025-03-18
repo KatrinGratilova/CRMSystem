@@ -18,6 +18,7 @@ import org.example.crmsystem.messages.ExceptionMessages;
 import org.example.crmsystem.messages.LogMessages;
 import org.example.crmsystem.utils.PasswordGenerator;
 import org.example.crmsystem.utils.UsernameGenerator;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -33,13 +34,15 @@ public class TrainerService {
     private final PasswordGenerator passwordGenerator;
     private final UsernameGenerator usernameGenerator;
     private final AuthenticationService authenticationService;
+    private final PasswordEncoder passwordEncoder;
 
-    public TrainerService(TrainerDAO trainerRepository, TrainerRepositoryCustom trainerRepositoryCustom, PasswordGenerator passwordGenerator, UsernameGenerator usernameGenerator, AuthenticationService authenticationService, MeterRegistry meterRegistry) {
+    public TrainerService(TrainerDAO trainerRepository, TrainerRepositoryCustom trainerRepositoryCustom, PasswordGenerator passwordGenerator, UsernameGenerator usernameGenerator, AuthenticationService authenticationService, MeterRegistry meterRegistry, PasswordEncoder passwordEncoder) {
         this.trainerRepository = trainerRepository;
         this.trainerRepositoryCustom = trainerRepositoryCustom;
         this.passwordGenerator = passwordGenerator;
         this.usernameGenerator = usernameGenerator;
         this.authenticationService = authenticationService;
+        this.passwordEncoder = passwordEncoder;
 
         Gauge.builder("trainer.count", trainerRepository::count)
                 .description("The number of trainers")
@@ -54,14 +57,18 @@ public class TrainerService {
         String transactionId = ThreadContext.get("transactionId");
         log.debug(LogMessages.ADDED_NEW_TRAINER.getMessage(), transactionId, trainerDTO.getFirstName());
 
+        String password = passwordGenerator.generateUserPassword();
+
         trainerDTO.setUsername(usernameGenerator.generateUsername(trainerDTO));
-        trainerDTO.setPassword(passwordGenerator.generateUserPassword());
+        trainerDTO.setPassword(passwordEncoder.encode(password));
+        trainerDTO.setActive(true);
 
         TrainerEntity addedTrainerEntity = trainerRepository.save(TrainerConverter.toEntity(trainerDTO));
-        authenticationService.authenticate(trainerDTO.getUsername(), trainerDTO.getPassword());
+        TrainerServiceDTO resultDTO = TrainerConverter.toServiceDTO(addedTrainerEntity);
+        resultDTO.setPassword(password);
 
         log.info(LogMessages.ADDED_NEW_TRAINER.getMessage(), transactionId, addedTrainerEntity.getUsername());
-        return TrainerConverter.toServiceDTO(addedTrainerEntity);
+        return resultDTO;
     }
 
     public TrainerServiceDTO getByUsername(String username) throws EntityNotFoundException {

@@ -36,16 +36,14 @@ public class TraineeService {
     private final TraineeRepositoryCustom traineeRepositoryCustom;
     private final PasswordGenerator passwordGenerator;
     private final UsernameGenerator usernameGenerator;
-    private final AuthenticationService authenticationService;
     private final TrainerService trainerService;
     private final PasswordEncoder passwordEncoder;
 
-    public TraineeService(TraineeDAO traineeRepository, TraineeRepositoryCustom traineeRepositoryCustom, PasswordGenerator passwordGenerator, UsernameGenerator usernameGenerator, AuthenticationService authenticationService, TrainerService trainerService, MeterRegistry meterRegistry, PasswordEncoder passwordEncoder) {
+    public TraineeService(TraineeDAO traineeRepository, TraineeRepositoryCustom traineeRepositoryCustom, PasswordGenerator passwordGenerator, UsernameGenerator usernameGenerator, TrainerService trainerService, MeterRegistry meterRegistry, PasswordEncoder passwordEncoder) {
         this.traineeRepository = traineeRepository;
         this.traineeRepositoryCustom = traineeRepositoryCustom;
         this.passwordGenerator = passwordGenerator;
         this.usernameGenerator = usernameGenerator;
-        this.authenticationService = authenticationService;
         this.trainerService = trainerService;
         this.passwordEncoder = passwordEncoder;
 
@@ -68,9 +66,7 @@ public class TraineeService {
         traineeDTO.setActive(true);
 
         TraineeEntity addedTraineeEntity = traineeRepository.save(TraineeConverter.toEntity(traineeDTO));
-
         TraineeServiceDTO resultDTO = TraineeConverter.toServiceDTO(addedTraineeEntity);
-
         resultDTO.setPassword(password);
 
         log.info(LogMessages.ADDED_NEW_TRAINEE.getMessage(), transactionId, resultDTO.getUsername());

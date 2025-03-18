@@ -1,4 +1,4 @@
-package org.example.crmsystem.configuration;
+package org.example.crmsystem.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class AuthenticationEventListener {
-
     private final org.example.crmsystem.security.LoginAttemptService loginAttemptService;
 
     @EventListener

@@ -4,8 +4,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.crmsystem.security.JwtTokenUtil;
 import org.example.crmsystem.converter.TrainerConverter;
 import org.example.crmsystem.dto.trainer.TrainerServiceDTO;
 import org.example.crmsystem.dto.trainer.request.TrainerRegistrationRequestDTO;
@@ -13,13 +15,17 @@ import org.example.crmsystem.dto.trainer.request.TrainerUpdateRequestDTO;
 import org.example.crmsystem.dto.trainer.response.TrainerGetResponseDTO;
 import org.example.crmsystem.dto.trainer.response.TrainerUpdateResponseDTO;
 import org.example.crmsystem.dto.training.TrainingByTrainerDTO;
-import org.example.crmsystem.dto.user.UserCredentialsDTO;
+import org.example.crmsystem.dto.user.UserRegisterResponseDTO;
 import org.example.crmsystem.dto.user.UserUpdateStatusRequestDTO;
-import jakarta.persistence.EntityNotFoundException;
 import org.example.crmsystem.service.TrainerService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -31,6 +37,8 @@ import java.util.List;
 @Tag(name = "Trainer Controller", description = "Operations related to trainers")
 public class TrainerController {
     private final TrainerService trainerService;
+    private final JwtTokenUtil jwtTokenUtil;
+    private final AuthenticationManager authenticationManager;
 
     @PostMapping
     @Operation(summary = "Register a new trainer", description = "Creates a new trainer in the system")
@@ -38,9 +46,19 @@ public class TrainerController {
             @ApiResponse(responseCode = "201", description = "Successfully registered a new trainer"),
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
-    public ResponseEntity<UserCredentialsDTO> registerTrainer(@Valid @RequestBody TrainerRegistrationRequestDTO trainer) {
+    public ResponseEntity<UserRegisterResponseDTO> registerTrainer(@Valid @RequestBody TrainerRegistrationRequestDTO trainer) {
         TrainerServiceDTO trainerDTO = trainerService.createProfile(TrainerConverter.toServiceDTO(trainer));
-        return new ResponseEntity<>(TrainerConverter.toRegistrationResponseDTO(trainerDTO), HttpStatus.CREATED);
+        UserRegisterResponseDTO responseDTO = TrainerConverter.toUserRegistrationResponseDTO(trainerDTO);
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(responseDTO.getUsername(), responseDTO.getPassword())
+        );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        final String jwt = jwtTokenUtil.generateToken((UserDetails) authentication.getPrincipal());
+        responseDTO.setToken(jwt);
+
+        return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
     }
 
     @GetMapping("/{username}")

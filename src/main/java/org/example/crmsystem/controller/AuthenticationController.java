@@ -8,6 +8,9 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.example.crmsystem.security.CustomUserDetailsService;
+import org.example.crmsystem.security.JwtResponse;
+import org.example.crmsystem.security.JwtTokenUtil;
 import org.example.crmsystem.dto.trainee.TraineeServiceDTO;
 import org.example.crmsystem.dto.user.UserChangeLoginRequestDTO;
 import org.example.crmsystem.dto.user.UserCredentialsDTO;
@@ -15,12 +18,17 @@ import org.example.crmsystem.dto.user.UserUpdateStatusRequestDTO;
 import org.example.crmsystem.exception.UserIsNotAuthenticated;
 import org.example.crmsystem.service.AuthenticationService;
 import org.example.crmsystem.service.TraineeService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,21 +36,37 @@ import org.springframework.web.bind.annotation.*;
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
     private final TraineeService traineeService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenUtil jwtTokenUtil;
+    private final CustomUserDetailsService customUserDetailsService;
 
-    @GetMapping("/login")
-    @Operation(summary = "Login user by credentials", description = "Logins user by credentials")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully authenticated user"),
-            @ApiResponse(responseCode = "404", description = "User not found"),
-            @ApiResponse(responseCode = "500", description = "Application failed to process the request")
-    })
-    public ResponseEntity<HttpStatus> login(@RequestBody UserCredentialsDTO user) {
-        boolean isAuthenticated = authenticationService.authenticate(user.getUsername(), user.getPassword());
+//    @GetMapping("/login")
+//    @Operation(summary = "Login user by credentials", description = "Logins user by credentials")
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "200", description = "Successfully authenticated user"),
+//            @ApiResponse(responseCode = "404", description = "User not found"),
+//            @ApiResponse(responseCode = "500", description = "Application failed to process the request")
+//    })
+//    public ResponseEntity<HttpStatus> login(@RequestBody UserCredentialsDTO user) {
+//        boolean isAuthenticated = authenticationService.authenticate(user.getUsername(), user.getPassword());
+//
+//        if (isAuthenticated)
+//            return new ResponseEntity<>(HttpStatus.ACCEPTED);
+//        else
+//            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+//    }
 
-        if (isAuthenticated)
-            return new ResponseEntity<>(HttpStatus.ACCEPTED);
-        else
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+    @PostMapping("/login")
+    public ResponseEntity<?> createAuthenticationToken(@RequestBody UserCredentialsDTO loginRequest) throws Exception {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        final String jwt = jwtTokenUtil.generateToken((UserDetails) authentication.getPrincipal());
+
+        return ResponseEntity.ok(new JwtResponse(jwt));
     }
 
     @PostMapping("/custom-logout")

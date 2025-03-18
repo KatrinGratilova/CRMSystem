@@ -9,6 +9,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.example.crmsystem.security.JwtTokenUtil;
 import org.example.crmsystem.converter.TraineeConverter;
 import org.example.crmsystem.dto.trainee.TraineeServiceDTO;
 import org.example.crmsystem.dto.trainee.request.TraineeRegistrationRequestDTO;
@@ -17,12 +18,17 @@ import org.example.crmsystem.dto.trainee.response.TraineeGetResponseDTO;
 import org.example.crmsystem.dto.trainee.response.TraineeUpdateResponseDTO;
 import org.example.crmsystem.dto.trainer.TrainerNestedDTO;
 import org.example.crmsystem.dto.training.TrainingByTraineeDTO;
-import org.example.crmsystem.dto.user.UserCredentialsDTO;
+import org.example.crmsystem.dto.user.UserRegisterResponseDTO;
 import org.example.crmsystem.dto.user.UserUpdateStatusRequestDTO;
 import org.example.crmsystem.service.TraineeService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -34,6 +40,8 @@ import java.util.List;
 @Tag(name = "Trainee Controller", description = "Operations related to trainees")
 public class TraineeController {
     private final TraineeService traineeService;
+    private final JwtTokenUtil jwtTokenUtil;
+    private final AuthenticationManager authenticationManager;
 
     @PostMapping
     @Operation(summary = "Register a new trainee", description = "Creates a new trainee in the system")
@@ -41,9 +49,19 @@ public class TraineeController {
             @ApiResponse(responseCode = "201", description = "Successfully registered a new trainee"),
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
-    public ResponseEntity<UserCredentialsDTO> registerTrainee(@Valid @RequestBody TraineeRegistrationRequestDTO trainee) {
+    public ResponseEntity<UserRegisterResponseDTO> registerTrainee(@Valid @RequestBody TraineeRegistrationRequestDTO trainee) {
         TraineeServiceDTO traineeDTO = traineeService.createProfile(TraineeConverter.toServiceDTO(trainee));
-        return new ResponseEntity<>(TraineeConverter.toRegistrationResponseDTO(traineeDTO), HttpStatus.CREATED);
+        UserRegisterResponseDTO responseDTO = TraineeConverter.toUserRegistrationResponseDTO(traineeDTO);
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(responseDTO.getUsername(), responseDTO.getPassword())
+        );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        final String jwt = jwtTokenUtil.generateToken((UserDetails) authentication.getPrincipal());
+        responseDTO.setToken(jwt);
+
+        return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
     }
 
     @GetMapping("/{username}")

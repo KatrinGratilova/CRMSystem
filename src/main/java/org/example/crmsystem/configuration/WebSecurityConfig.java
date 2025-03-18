@@ -1,6 +1,7 @@
 package org.example.crmsystem.configuration;
 
 import lombok.RequiredArgsConstructor;
+import org.example.crmsystem.security.JwtRequestFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,36 +14,36 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-public class WebSecurityConfig {
+public class WebSecurityConfig implements WebMvcConfigurer {
     private final UserDetailsService userDetailsService;
+    private final JwtRequestFilter jwtRequestFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable) // отключаем CSRF для REST
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/trainers", "/trainees").permitAll()
+                        .requestMatchers("/login", "/trainers", "/trainees").permitAll()
                         .anyRequest().authenticated()
                 )
-                .formLogin(formLogin ->
-                        formLogin
-                                .loginProcessingUrl("/login") // URL для обработки POST запроса на логин
-                                .permitAll() // Разрешаем доступ к странице логина
-                                .defaultSuccessUrl("/home", true) // Перенаправление после успешного входа
-                )
                 .logout(logout -> logout
-                        .logoutUrl("/login/logout")                      // URL, на который отправляется POST запрос
+                        .logoutUrl("/login/logout")
                         .logoutSuccessHandler((request, response, authentication) -> {
-                            response.setStatus(200);               // Возвращаем HTTP 200 после выхода
+                            response.setStatus(200);
                         })
-                        .invalidateHttpSession(true)               // Уничтожаем сессию
-                        .deleteCookies("JSESSIONID")               // Удаляем куку
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
                         .permitAll()
                 );
+
+        http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -63,5 +64,14 @@ public class WebSecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:3000")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH")
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 }
