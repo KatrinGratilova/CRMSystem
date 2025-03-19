@@ -33,7 +33,6 @@ public class LoginAttemptService {
 
         LocalDateTime blockedAt = blockTime.get(username);
         if (blockedAt.plusMinutes(BLOCK_DURATION_MINUTES).isBefore(LocalDateTime.now())) {
-            // unblock
             attempts.remove(username);
             blockTime.remove(username);
             return false;

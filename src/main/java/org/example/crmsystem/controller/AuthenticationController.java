@@ -27,7 +27,7 @@ import java.time.LocalDateTime;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/log")
+@RequestMapping("/login")
 @Tag(name = "Authentication Controller", description = "Operations related to user authentication")
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
@@ -35,7 +35,7 @@ public class AuthenticationController {
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtTokenUtil jwtTokenUtil;
 
-    @PostMapping("/login")
+    @PostMapping()
     @Operation(summary = "Login user by credentials", description = "Logins user by credentials")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully authenticated user"),
@@ -55,11 +55,12 @@ public class AuthenticationController {
         final String accessToken = jwtTokenUtil.generateToken((UserDetails) authentication.getPrincipal());
         final String refreshToken = jwtTokenUtil.generateRefreshToken((UserDetails) authentication.getPrincipal());
 
-        RefreshToken refresh = new RefreshToken();
-        refresh.setToken(accessToken);
-        refresh.setUsername(loginRequest.getUsername());
-        refresh.setCreatedAt(LocalDateTime.now());
-        refresh.setExpiresAt(LocalDateTime.now().plusSeconds(10000000));
+        RefreshToken refresh = RefreshToken.builder()
+                .token(refreshToken)
+                .username(loginRequest.getUsername())
+                .createdAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusSeconds(10000000))
+                .build();
 
         refreshTokenRepository.save(refresh);
         JwtResponse jwtResponse = new JwtResponse(accessToken, refreshToken);
@@ -70,7 +71,6 @@ public class AuthenticationController {
     @PostMapping("/logout")
     public ResponseEntity<Boolean> logout(HttpServletRequest request,
                                                        HttpServletResponse response) throws IOException {
-        System.out.println(1);
         return authenticationService.logout(request, response);
     }
 

@@ -6,6 +6,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.crmsystem.dao.interfaces.RefreshTokenRepository;
+import org.example.crmsystem.entity.RefreshToken;
+import org.example.crmsystem.entity.RefreshTokenStatus;
 import org.example.crmsystem.security.CustomUserDetailsService;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,19 +25,15 @@ import java.io.IOException;
 public class JwtRequestFilter extends OncePerRequestFilter {
     private final JwtTokenUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
-
-        log.info("doFilterInternal");
-        log.info(request.getRequestURI());
         if (request.getRequestURI().startsWith("/log/logout")) {
-            log.info("doFilterInternal2");
             filterChain.doFilter(request, response);
-            log.info("doFilterInternal3");
             return;
         }
 
@@ -52,8 +51,16 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
             if (jwtUtil.validateToken(jwt, userDetails)) {
+                RefreshToken refreshToken = refreshTokenRepository.findByToken(jwt)
+                        .orElse(null);
+
+                if (refreshToken != null && refreshToken.getRefreshTokenStatus() == RefreshTokenStatus.REVOKED) {
+                    log.warn("Token is revoked, denying access.");
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("Token is revoked.");
+                    return;
+                }
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
