@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Entity
 @Data
@@ -25,9 +25,9 @@ public class RefreshToken {
 
     @Column(nullable = false, updatable = false)
     @CreatedDate
-    private LocalDateTime createdAt;
+    private Date createdAt;
 
     @Column(nullable = false)
-    private LocalDateTime expiresAt;
+    private Date expiresAt;
 
 }

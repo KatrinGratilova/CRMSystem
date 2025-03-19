@@ -3,6 +3,7 @@ package org.example.crmsystem.security.jwt;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.example.crmsystem.service.TokenWithMetadata;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +14,7 @@ import java.util.Date;
 public class JwtTokenUtil {
     private final SecretKey SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
     private static final long EXPIRATION_TIME_MILLIS = 15 * 60 * 1000;
+    private static final long REFRESH_EXPIRATION_TIME_MILLIS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
     public String generateToken(UserDetails userDetails) {
         return Jwts.builder()
@@ -47,15 +49,17 @@ public class JwtTokenUtil {
                 .getExpiration();
     }
 
-    public String generateRefreshToken(UserDetails userDetails) {
+    public TokenWithMetadata generateRefreshToken(UserDetails userDetails) {
         Date now = new Date();
-        Date validity = new Date(now.getTime() + EXPIRATION_TIME_MILLIS * 1000); // Долгий срок действия
+        Date validity = new Date(now.getTime() + REFRESH_EXPIRATION_TIME_MILLIS);
 
-        return Jwts.builder()
+        String token = Jwts.builder()
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(now)
                 .setExpiration(validity)
                 .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
                 .compact();
+
+        return new TokenWithMetadata(token, now, validity);
     }
 }

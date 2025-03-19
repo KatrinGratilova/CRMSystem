@@ -37,16 +37,6 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                         .requestMatchers("/login", "/login/logout", "/trainers", "/trainees").permitAll()
                         .anyRequest().authenticated()
                 );
-//                .logout(logout -> logout
-//                        .logoutUrl("/log/logout")
-//                        .logoutSuccessHandler((request, response, authentication) -> {
-//                            response.setStatus(HttpServletResponse.SC_OK);
-//                            response.getWriter().write("Logged out successfully");
-//                        })
-////                        .addLogoutHandler(logoutHandler) // Adds a custom logout handler (logoutHandler) to handle the logout process
-////                        .logoutSuccessHandler(logoutSuccessHandler)
-//                        .permitAll());// Allows all users to access the logout endpoint without authentication
-
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
