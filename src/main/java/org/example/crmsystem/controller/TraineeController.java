@@ -9,6 +9,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.example.crmsystem.security.jwt.JwtTokenUtil;
 import org.example.crmsystem.converter.TraineeConverter;
 import org.example.crmsystem.dto.trainee.TraineeServiceDTO;
 import org.example.crmsystem.dto.trainee.request.TraineeRegistrationRequestDTO;
@@ -17,12 +18,17 @@ import org.example.crmsystem.dto.trainee.response.TraineeGetResponseDTO;
 import org.example.crmsystem.dto.trainee.response.TraineeUpdateResponseDTO;
 import org.example.crmsystem.dto.trainer.TrainerNestedDTO;
 import org.example.crmsystem.dto.training.TrainingByTraineeDTO;
-import org.example.crmsystem.dto.user.UserCredentialsDTO;
+import org.example.crmsystem.dto.user.UserRegisterResponseDTO;
 import org.example.crmsystem.dto.user.UserUpdateStatusRequestDTO;
 import org.example.crmsystem.service.TraineeService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -34,6 +40,8 @@ import java.util.List;
 @Tag(name = "Trainee Controller", description = "Operations related to trainees")
 public class TraineeController {
     private final TraineeService traineeService;
+    private final JwtTokenUtil jwtTokenUtil;
+    private final AuthenticationManager authenticationManager;
 
     @PostMapping
     @Operation(summary = "Register a new trainee", description = "Creates a new trainee in the system")
@@ -41,9 +49,19 @@ public class TraineeController {
             @ApiResponse(responseCode = "201", description = "Successfully registered a new trainee"),
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
-    public ResponseEntity<UserCredentialsDTO> registerTrainee(@Valid @RequestBody TraineeRegistrationRequestDTO trainee) {
+    public ResponseEntity<UserRegisterResponseDTO> registerTrainee(@Valid @RequestBody TraineeRegistrationRequestDTO trainee) {
         TraineeServiceDTO traineeDTO = traineeService.createProfile(TraineeConverter.toServiceDTO(trainee));
-        return new ResponseEntity<>(TraineeConverter.toRegistrationResponseDTO(traineeDTO), HttpStatus.CREATED);
+        UserRegisterResponseDTO responseDTO = TraineeConverter.toUserRegistrationResponseDTO(traineeDTO);
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(responseDTO.getUsername(), responseDTO.getPassword())
+        );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        final String jwt = jwtTokenUtil.generateToken((UserDetails) authentication.getPrincipal());
+        responseDTO.setToken(jwt);
+
+        return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
     }
 
     @GetMapping("/{username}")
@@ -55,11 +73,17 @@ public class TraineeController {
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
     public ResponseEntity<TraineeGetResponseDTO> getTrainee(@PathVariable("username") String username) throws EntityNotFoundException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        if (!currentUsername.equals(username))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         TraineeServiceDTO traineeDTO = traineeService.getByUsername(username);
         return new ResponseEntity<>(TraineeConverter.toGetResponseDTO(traineeDTO), HttpStatus.FOUND);
     }
 
-    @PutMapping
+    @PutMapping("/{username}")
     @Operation(summary = "Update trainee", description = "Updates trainee information")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully updated trainee"),
@@ -67,7 +91,14 @@ public class TraineeController {
             @ApiResponse(responseCode = "404", description = "Trainee not found"),
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
-    public ResponseEntity<TraineeUpdateResponseDTO> updateTrainee(@Valid @RequestBody TraineeUpdateRequestDTO trainee) throws EntityNotFoundException {
+    public ResponseEntity<TraineeUpdateResponseDTO> updateTrainee(@PathVariable("username") String username, @Valid @RequestBody TraineeUpdateRequestDTO trainee) throws EntityNotFoundException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        if (!currentUsername.equals(username))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
+        trainee.setUsername(username);
         TraineeServiceDTO traineeDTO = traineeService.update(TraineeConverter.toServiceDTO(trainee));
         return new ResponseEntity<>(TraineeConverter.toUpdateResponseDTO(traineeDTO), HttpStatus.OK);
     }
@@ -81,6 +112,12 @@ public class TraineeController {
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
     public ResponseEntity<HttpStatus> deleteTrainee(@PathVariable("username") String username) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        if (!currentUsername.equals(username))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         traineeService.deleteByUsername(username);
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -94,6 +131,12 @@ public class TraineeController {
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
     public ResponseEntity<List<TrainerNestedDTO>> getTrainersNotAssignedToTrainee(@PathVariable("username") String username) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        if (!currentUsername.equals(username))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         List<TrainerNestedDTO> trainers = traineeService.getTrainersNotAssignedToTrainee(username);
         return new ResponseEntity<>(trainers, HttpStatus.OK);
     }
@@ -109,6 +152,12 @@ public class TraineeController {
     public ResponseEntity<List<TrainerNestedDTO>> updateTraineeTrainers(
             @PathVariable("username") String username,
             @NotNull @RequestBody List<String> trainerUsernames) throws EntityNotFoundException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        if (!currentUsername.equals(username))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         List<TrainerNestedDTO> updatedTrainers = traineeService.updateTraineeTrainers(username, trainerUsernames);
         return new ResponseEntity<>(updatedTrainers, HttpStatus.OK);
     }
@@ -128,6 +177,12 @@ public class TraineeController {
             @RequestParam(required = false) String trainerUsername,
             @RequestParam(required = false) String trainingType
     ) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        if (!currentUsername.equals(username))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         List<TrainingByTraineeDTO> trainings = traineeService.getTraineeTrainingsByCriteria(username, fromDate, toDate, trainerUsername, trainingType);
         return new ResponseEntity<>(trainings, HttpStatus.OK);
     }
@@ -141,6 +196,12 @@ public class TraineeController {
             @ApiResponse(responseCode = "500", description = "Application failed to process the request")
     })
     public ResponseEntity<HttpStatus> toggleActiveStatus(@PathVariable String username, @Valid @RequestBody UserUpdateStatusRequestDTO request) throws EntityNotFoundException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        if (!currentUsername.equals(username))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         traineeService.toggleActiveStatus(username, request);
         return new ResponseEntity<>(HttpStatus.OK);
     }

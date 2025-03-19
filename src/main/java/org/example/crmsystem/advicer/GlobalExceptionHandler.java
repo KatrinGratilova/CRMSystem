@@ -1,7 +1,9 @@
 package org.example.crmsystem.advicer;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.persistence.EntityNotFoundException;
 import org.example.crmsystem.exception.IncompatibleSpecialization;
+import org.example.crmsystem.exception.RefreshTokenDoesNotExist;
 import org.example.crmsystem.messages.ExceptionMessages;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,5 +47,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleIncompatibleSpecialization(IncompatibleSpecialization ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ex.getMessage());
+    }
+
+    @ExceptionHandler(RefreshTokenDoesNotExist.class)
+    public ResponseEntity<String> handleRefreshTokenDoesNotExist(RefreshTokenDoesNotExist ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ex.getMessage());
+    }
+
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<String> handleJwtException(JwtException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ExceptionMessages.INVALID_TOKEN.getMessage());
     }
 }
