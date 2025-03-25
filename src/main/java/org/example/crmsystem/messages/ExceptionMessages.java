@@ -16,7 +16,10 @@ public enum ExceptionMessages {
     TRAINEE_WITH_USERNAME_IS_NOT_FOUND("Trainee with username %s is not found."),
     TRAINER_WITH_USERNAME_IS_NOT_FOUND("Trainer with username %s is not found."),
 
-    INVALID_REQUEST_BODY("Request body is invalid. Request body is required and cannot be empty.");
+    INVALID_REQUEST_BODY("Request body is invalid. Request body is required and cannot be empty."),
+
+    REFRESH_TOKEN_DOES_NOT_EXIST("Refresh token does not exist."),
+    INVALID_TOKEN("Invalid token."),;
 
     private final String message;
 
