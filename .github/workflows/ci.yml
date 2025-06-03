@@ -69,7 +69,7 @@ jobs:
         run: ./mvnw test -Dspring.profiles.active=prod
 
   docker-build:
-    name: Docker build
+    name: Docker build check
     runs-on: ubuntu-latest
     needs: test
 
@@ -77,8 +77,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Build JAR file
+        run: ./mvnw package -DskipTests
+
       - name: Build Docker image
         run: docker build -t my-spring-app .
-
-      - name: Simulate deploy
-        run: echo "Deploy successful (simulation)"
