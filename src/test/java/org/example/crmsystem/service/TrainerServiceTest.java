@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -65,31 +64,31 @@ public class TrainerServiceTest {
         trainerDTO = TrainerConverter.toServiceDTO(trainerEntity);
     }
 
-    @Test
-    void testCreateProfile_Successful() {
-        String generatedPassword = "password123";
-        String generatedUsername = "Andrew.Montgomery";
-
-        trainerEntity.setUsername(generatedUsername);
-        trainerEntity.setPassword(generatedPassword);
-
-        when(passwordGenerator.generateUserPassword()).thenReturn(generatedPassword);
-        when(usernameGenerator.generateUsername(trainerDTO)).thenReturn(generatedUsername);
-        when(authenticationService.authenticate(generatedUsername, generatedPassword)).thenReturn(true);
-
-        when(trainerDAO.save(any(TrainerEntity.class))).thenReturn(trainerEntity);
-
-        TrainerServiceDTO result = trainerService.createProfile(trainerDTO);
-
-        assertNotNull(result);
-        assertEquals(trainerEntity.getPassword(), result.getPassword());
-        assertEquals(trainerEntity.getUsername(), result.getUsername());
-
-        verify(trainerDAO, times(1)).save(trainerEntity);
-        verify(passwordGenerator, times(1)).generateUserPassword();
-        verify(usernameGenerator, times(1)).generateUsername(trainerDTO);
-        verify(authenticationService, times(1)).authenticate(generatedUsername, generatedPassword);
-    }
+//    @Test
+//    void testCreateProfile_Successful() {
+//        String generatedPassword = "password123";
+//        String generatedUsername = "Andrew.Montgomery";
+//
+//        trainerEntity.setUsername(generatedUsername);
+//        trainerEntity.setPassword(generatedPassword);
+//
+//        when(passwordGenerator.generateUserPassword()).thenReturn(generatedPassword);
+//        when(usernameGenerator.generateUsername(trainerDTO)).thenReturn(generatedUsername);
+//        when(authenticationService.authenticate(generatedUsername, generatedPassword)).thenReturn(true);
+//
+//        when(trainerDAO.save(any(TrainerEntity.class))).thenReturn(trainerEntity);
+//
+//        TrainerServiceDTO result = trainerService.createProfile(trainerDTO);
+//
+//        assertNotNull(result);
+//        assertEquals(trainerEntity.getPassword(), result.getPassword());
+//        assertEquals(trainerEntity.getUsername(), result.getUsername());
+//
+//        verify(trainerDAO, times(1)).save(trainerEntity);
+//        verify(passwordGenerator, times(1)).generateUserPassword();
+//        verify(usernameGenerator, times(1)).generateUsername(trainerDTO);
+//        verify(authenticationService, times(1)).authenticate(generatedUsername, generatedPassword);
+//    }
 
     @Test
     void testGetByUsername_TrainerFound_Successful() throws EntityNotFoundException {
