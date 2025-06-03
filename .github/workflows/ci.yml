@@ -86,6 +86,9 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Make Maven Wrapper executable
+        run: chmod +x mvnw
+
       - name: Build JAR file
         run: ./mvnw package -DskipTests
 
@@ -95,5 +98,3 @@ jobs:
           context: .
           push: true
           tags: gratilovakatrin/my-spring-app:latest
-
-
