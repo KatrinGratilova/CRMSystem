@@ -95,3 +95,5 @@ jobs:
           context: .
           push: true
           tags: gratilovakatrin/my-spring-app:latest
+
+
